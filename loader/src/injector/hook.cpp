@@ -190,7 +190,7 @@ DCL_HOOK_FUNC(int, pthread_attr_setstacksize, void *target, size_t size) {
             // Because both `pthread_attr_setstacksize` and `dlclose` have the same function signature,
             // we can use `musttail` to let the compiler reuse our stack frame and thus
             // `dlclose` will directly return to the caller of `pthread_attr_setstacksize`.
-            LOGI("unmap libzygisk.so loaded at %p with size %zu", start_addr, block_size);
+            LOGD("unmap libzygisk.so loaded at %p with size %zu", start_addr, block_size);
 
             [[clang::musttail]] return munmap(start_addr, block_size);
         }
@@ -603,7 +603,7 @@ void ZygiskContext::app_specialize_pre() {
     }
 
     if ((info_flags & (PROCESS_IS_MANAGER | PROCESS_ROOT_IS_MAGISK)) == (PROCESS_IS_MANAGER | PROCESS_ROOT_IS_MAGISK)) {
-        LOGI("Manager process detected. Notifying that Zygisk has been enabled.");
+        LOGD("Manager process detected. Notifying that Zygisk has been enabled.");
 
         setenv("ZYGISK_ENABLED", "1", 1);
     } else {
