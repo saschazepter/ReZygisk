@@ -54,4 +54,10 @@ enum RootImplState {
   Abnormal
 };
 
+enum MountNamespaceState {
+  Clean,
+  Rooted,
+  Module
+};
+
 #endif /* CONSTANTS_H */

@@ -20,8 +20,11 @@
 
 #include "utils.h"
 #include "root_impl/common.h"
+#include "root_impl/magisk.h"
 
 int clean_namespace_fd = 0;
+int rooted_namespace_fd = 0;
+int module_namespace_fd = 0;
 
 bool switch_mount_namespace(pid_t pid) {
   char path[PATH_MAX];
@@ -590,7 +593,7 @@ bool parse_mountinfo(const char *restrict pid, struct mountinfos *restrict mount
   return true;
 }
 
-void unmount_root(struct root_impl impl) {
+void unmount_root(bool modules_only, struct root_impl impl) {
   /* INFO: We are already in the target pid mount namespace, so actually,
              when we use self here, we meant its pid.
   */
@@ -600,9 +603,6 @@ void unmount_root(struct root_impl impl) {
 
     return;
   }
-
-  char **mounts_to_unmount = NULL;
-  size_t mounts_to_unmount_len = 0;
 
   switch (impl.impl) {
     case None: { break; }
@@ -618,29 +618,23 @@ void unmount_root(struct root_impl impl) {
         struct mountinfo mount = mounts.mounts[i];
 
         if (
-          strcmp(mount.source, source_name) == 0 ||
-          strncmp(mount.root, "/adb/modules", strlen("/adb/modules")) == 0 || 
-          strncmp(mount.target, "/data/adb/modules", strlen("/data/adb/modules")) == 0
+          (
+            modules_only && 
+            (
+              strncmp(mount.target, "/debug_ramdisk", strlen("/debug_ramdisk")) == 0
+            )
+          ) ||
+          (
+            strcmp(mount.source, source_name) == 0 ||
+            strncmp(mount.root, "/adb/modules", strlen("/adb/modules")) == 0 || 
+            strncmp(mount.target, "/data/adb/modules", strlen("/data/adb/modules")) == 0
+          )
         ) {
-          mounts_to_unmount = (char **)realloc(mounts_to_unmount, (mounts_to_unmount_len + 1) * sizeof(char *));
-          if (!mounts_to_unmount) {
-            LOGE("Failed to allocate memory for mounts_to_unmount\n");
+          if (umount2(mount.target, MNT_DETACH) == -1) {
+            LOGE("[Magisk] Failed to unmount %s: %s\n", mount.target, strerror(errno));
 
-            free_mounts(&mounts);
-
-            return;
+            continue;
           }
-
-          mounts_to_unmount[mounts_to_unmount_len] = strdup(mount.target);
-          if (!mounts_to_unmount[mounts_to_unmount_len]) {
-            LOGE("Failed to allocate memory for mounts_to_unmount[%zu]\n", mounts_to_unmount_len);
-
-            free_mounts(&mounts);
-
-            return;
-          }
-
-          mounts_to_unmount_len++;
 
           LOGI("[%s] Unmounted %s (%s | %s)\n", source_name, mount.target, mount.root, mount.source);
         }
@@ -649,34 +643,33 @@ void unmount_root(struct root_impl impl) {
       break;
     }
     case Magisk: {
+      LOGI("[Magisk] Unmounting root\n");
+
       for (size_t i = mounts.length - 1; i > 0; i--) {
         struct mountinfo mount = mounts.mounts[i];
 
         if (
-          strcmp(mount.source, "Magisk") == 0 ||
-          strcmp(mount.source, "worker") == 0 ||
-          strncmp(mount.root, "/adb/modules", strlen("/adb/modules")) ||
-          strncmp(mount.target, "/data/adb/modules", strlen("/data/adb/modules"))
+          (
+            modules_only && 
+            (
+              strncmp(mount.target, "/debug_ramdisk", strlen("/debug_ramdisk")) == 0 ||
+              strcmp(mount.source, "magisk") == 0 ||
+              strncmp(mount.target, "/system/bin", strlen("/system/bin")) == 0
+            )
+          ) ||
+          (
+            !modules_only && 
+            (
+              strcmp(mount.source, "magisk") == 0 ||
+              strncmp(mount.root, "/adb/modules", strlen("/adb/modules")) == 0
+            )
+          )
         ) {
-          mounts_to_unmount = (char **)realloc(mounts_to_unmount, (mounts_to_unmount_len + 1) * sizeof(char *));
-          if (!mounts_to_unmount) {
-            LOGE("Failed to allocate memory for mounts_to_unmount\n");
+          if (umount2(mount.target, MNT_DETACH) == -1) {
+            LOGE("[Magisk] Failed to unmount %s: %s\n", mount.target, strerror(errno));
 
-            free_mounts(&mounts);
-
-            return;
+            continue;
           }
-
-          mounts_to_unmount[mounts_to_unmount_len] = strdup(mount.target);
-          if (!mounts_to_unmount[mounts_to_unmount_len]) {
-            LOGE("Failed to allocate memory for mounts_to_unmount[%zu]\n", mounts_to_unmount_len);
-
-            free_mounts(&mounts);
-
-            return;
-          }
-
-          mounts_to_unmount_len++;
 
           LOGI("[Magisk] Unmounted %s\n", mount.target);
         }
@@ -684,26 +677,23 @@ void unmount_root(struct root_impl impl) {
     }
   }
 
-  for (size_t i = 0; i < mounts_to_unmount_len; i++) {
-    if (umount2(mounts_to_unmount[i], MNT_DETACH) == -1) {
-      LOGE("Failed to unmount %s: %s\n", mounts_to_unmount[i], strerror(errno));
-
-      continue;
-    }
-  }
-
-  for (size_t i = 0; i < mounts_to_unmount_len; i++) {
-    free((void *)mounts_to_unmount[i]);
-  }
-  free((void *)mounts_to_unmount);
-
   free_mounts(&mounts);
 
   return;
 }
 
-int get_clean_mns_fd(int pid, struct root_impl impl) {
-  if (clean_namespace_fd != 0) return clean_namespace_fd;
+int save_mns_fd(int pid, enum MountNamespaceState mns_state, struct root_impl impl) {
+  LOGI(" - Saving mount namespace fd for pid %d. State: %d\n", pid, mns_state);
+
+  LOGI(" - Clean namespace fd: %d\n", clean_namespace_fd);
+  LOGI(" - Rooted namespace fd: %d\n", rooted_namespace_fd);
+  LOGI(" - Module namespace fd: %d\n", module_namespace_fd);
+
+  if (mns_state == Clean && clean_namespace_fd != 0) return clean_namespace_fd;
+  if (mns_state == Rooted && rooted_namespace_fd != 0) return rooted_namespace_fd;
+  if (mns_state == Module && module_namespace_fd != 0) return module_namespace_fd;
+
+  LOGI(" - Creating socketpair\n");
 
   int sockets[2];
   if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockets) == -1) {
@@ -718,11 +708,18 @@ int get_clean_mns_fd(int pid, struct root_impl impl) {
   pid_t fork_pid = fork();
   if (fork_pid == 0) {
     switch_mount_namespace(pid);
-    unmount_root(impl);
 
-    write_uint32_t(writer, 0);
-    uint32_t _ = 0;
-    read_uint32_t(reader, &_);
+    if (mns_state != Rooted) {
+      unshare(CLONE_NEWNS);
+      unmount_root(mns_state == Module, impl);
+    }
+
+    uint32_t mypid = 0;
+    while (mypid != (uint32_t)getpid()) {
+      write_uint32_t(writer, 0);
+      usleep(50);
+      read_uint32_t(reader, &mypid);
+    }
 
     _exit(0);
   } else if (fork_pid > 0) {
@@ -739,7 +736,7 @@ int get_clean_mns_fd(int pid, struct root_impl impl) {
       return -1;
     }
 
-    write_uint32_t(writer, 0);
+    write_uint32_t(writer, (uint32_t)fork_pid);
 
     if (close(reader) == -1) {
       LOGE("Failed to close reader: %s\n", strerror(errno));
@@ -759,7 +756,11 @@ int get_clean_mns_fd(int pid, struct root_impl impl) {
       return -1;
     }
 
-    return (clean_namespace_fd = ns_fd);
+    LOGI(" - Forked child exited\n");
+
+    if (mns_state == Rooted) return (rooted_namespace_fd = ns_fd);
+    else if (mns_state == Clean) return (clean_namespace_fd = ns_fd);
+    else if (mns_state == Module) return (module_namespace_fd = ns_fd);
   } else {
     LOGE("fork: %s\n", strerror(errno));
 

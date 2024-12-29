@@ -507,11 +507,7 @@ void zygiskd_start(char *restrict argv[]) {
         if (first_process) {
           flags |= PROCESS_IS_FIRST_STARTED;
 
-          if (!uid_is_systemui(uid)) {
-            LOGI("First process started\n");
-
-            first_process = false;
-          }
+          first_process = false;
         } else {
           if (uid_is_manager(uid)) {
             flags |= PROCESS_IS_MANAGER;
@@ -718,11 +714,15 @@ void zygiskd_start(char *restrict argv[]) {
         ssize_t ret = read_uint32_t(client_fd, (uint32_t *)&pid);
         ASSURE_SIZE_READ_BREAK("GetCleanNamespace", "pid", ret, sizeof(pid));
 
+        uint8_t mns_state = 0;
+        ret = read_uint8_t(client_fd, &mns_state);
+        ASSURE_SIZE_READ_BREAK("GetCleanNamespace", "mns_state", ret, sizeof(mns_state));
+
         pid_t our_pid = getpid();
         ret = write_uint32_t(client_fd, (uint32_t)our_pid);
         ASSURE_SIZE_WRITE_BREAK("GetCleanNamespace", "our_pid", ret, sizeof(our_pid));
 
-        uint32_t clean_namespace_fd = (uint32_t)get_clean_mns_fd(pid, impl);
+        uint32_t clean_namespace_fd = (uint32_t)save_mns_fd(pid, (enum MountNamespaceState)mns_state, impl);
         ret = write_uint32_t(client_fd, clean_namespace_fd);
         ASSURE_SIZE_WRITE_BREAK("GetCleanNamespace", "clean_namespace_fd", ret, sizeof(clean_namespace_fd));
 

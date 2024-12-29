@@ -94,8 +94,8 @@ namespace zygiskd {
     return res;
   }
 
-  std::vector<Module> ReadModules() {
-    std::vector<Module> modules;
+  std::vector<ModuleInfo> ReadModules() {
+    std::vector<ModuleInfo> modules;
     int fd = Connect(1);
     if (fd == -1) {
       PLOGE("ReadModules");
@@ -261,16 +261,17 @@ namespace zygiskd {
     } else info->running = false;
   }
 
-  std::string GetCleanNamespace() {
+  std::string UpdateMountNamespace(enum mount_namespace_state nms_state) {
     int fd = Connect(1);
     if (fd == -1) {
-      PLOGE("GetCleanNamespace");
+      PLOGE("UpdateMountNamespace");
 
       return "";
     }
 
-    socket_utils::write_u8(fd, (uint8_t) SocketAction::GetCleanNamespace);
+    socket_utils::write_u8(fd, (uint8_t) SocketAction::UpdateMountNamespace);
     socket_utils::write_u32(fd, getpid());
+    socket_utils::write_u8(fd, (uint8_t)nms_state);
 
     uint32_t target_pid = socket_utils::read_u32(fd);
     int target_fd = 0;
@@ -279,6 +280,8 @@ namespace zygiskd {
 
     target_fd = (int)socket_utils::read_u32(fd);
     if (target_fd == 0) goto error;
+
+    close(fd);
   
     return "/proc/" + std::to_string(target_pid) + "/fd/" + std::to_string(target_fd);
 
