@@ -1,6 +1,9 @@
 #include <stdio.h>
+#include <string.h>
+#include <errno.h>
 
 #include <sys/types.h>
+#include <sys/stat.h>
 
 #include "../utils.h"
 #include "kernelsu.h"
@@ -123,4 +126,18 @@ bool uid_is_manager(uid_t uid) {
       return false;
     }
   }
+}
+
+bool uid_is_systemui(uid_t uid) {
+  struct stat s;
+  if (stat("/data/user_de/0/com.android.systemui", &s) == -1) {
+    if (errno != ENOENT) {
+      LOGE("Failed to stat SystemUI data directory: %s\n", strerror(errno));
+    }
+    errno = 0;
+
+    return false;
+  }
+
+  return s.st_uid == uid;
 }
