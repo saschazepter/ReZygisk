@@ -123,7 +123,6 @@ vector<tuple<dev_t, ino_t, const char *, void **>> *plt_hook_list;
 map<string, vector<JNINativeMethod>, StringCmp> *jni_hook_list;
 bool should_unmap_zygisk = false;
 std::vector<lsplt::MapInfo> cached_map_infos = {};
-std::vector<std::string> cached_mountinfo = {};
 
 } // namespace
 
@@ -138,36 +137,29 @@ DCL_HOOK_FUNC(int, fork) {
     return (g_ctx && g_ctx->pid >= 0) ? g_ctx->pid : old_fork();
 }
 
-void clean_mnt_ns() {
-    std::string path = zygiskd::GetCleanNamespace();
-    LOGI("Switching to clean namespace: %s", path.data());
+bool update_mnt_ns(enum mount_namespace_state mns_state, bool dry_run) {
+    std::string ns_path = zygiskd::UpdateMountNamespace(mns_state);
+    if (ns_path.empty()) {
+        PLOGE("Failed to update mount namespace");
 
-    if (path.empty()) {
-        LOGE("Failed to get clean namespace path");
-
-        return;
+        return false;
     }
 
-    int nsfd = open(path.data(), O_RDONLY | O_CLOEXEC);
-    if (nsfd == -1) {
-        LOGE("Failed to open clean namespace: %s", strerror(errno));
+    if (dry_run) return true;
 
-        return;
+    int updated_ns = open(ns_path.data(), O_RDONLY);
+    if (updated_ns == -1) {
+        PLOGE("Failed to open mount namespace [%s]", ns_path.data());
+
+        return false;
     }
 
-    if (setns(nsfd, CLONE_NEWNS) == -1) {
-        LOGE("Failed to setns clean namespace: %s", strerror(errno));
+    LOGD("set mount namespace to [%s] fd=[%d]\n", ns_path.data(), updated_ns);
+    setns(updated_ns, CLONE_NEWNS);
 
-        close(nsfd);
+    close(updated_ns);
 
-        return;
-    }
-
-    close(nsfd);
-
-    LOGD("Switched to clean namespace");
-
-    return;
+    return true;
 }
 
 // Unmount stuffs in the process's private mount namespace
@@ -177,17 +169,19 @@ DCL_HOOK_FUNC(int, unshare, int flags) {
         // For some unknown reason, unmounting app_process in SysUI can break.
         // This is reproducible on the official AVD running API 26 and 27.
         // Simply avoid doing any unmounts for SysUI to avoid potential issues.
-        (g_ctx->info_flags & PROCESS_IS_FIRST_STARTED) == 0) {
-        if (g_ctx->flags[DO_REVERT_UNMOUNT]) clean_mnt_ns();
-        else if (!(g_ctx->info_flags & (PROCESS_IS_MANAGER | PROCESS_GRANTED_ROOT)))
-            do_umount(cached_mountinfo);
+        !g_ctx->flags[SERVER_FORK_AND_SPECIALIZE] && !(g_ctx->info_flags & PROCESS_IS_FIRST_STARTED)) {
+        if (g_ctx->info_flags & (PROCESS_IS_MANAGER | PROCESS_GRANTED_ROOT)) {
+            update_mnt_ns(Rooted, false);
+        } else if (!g_ctx->flags[DO_REVERT_UNMOUNT]) {
+            update_mnt_ns(Module, false);
+        }
 
-        /* Zygisksu changed: No umount app_process */
         old_unshare(CLONE_NEWNS);
-
-        // Restore errno back to 0
-        errno = 0;
     }
+
+    /* INFO: To spoof the errno value */
+    errno = 0;
+
     return res;
 }
 
@@ -218,7 +212,6 @@ DCL_HOOK_FUNC(int, pthread_attr_setstacksize, void *target, size_t size) {
         unhook_functions();
 
         cached_map_infos.clear();
-        cached_mountinfo.clear();
 
         if (should_unmap_zygisk) {
             // Because both `pthread_attr_setstacksize` and `dlclose` have the same function signature,
@@ -631,15 +624,9 @@ void ZygiskContext::run_modules_post() {
 void ZygiskContext::app_specialize_pre() {
     flags[APP_SPECIALIZE] = true;
 
-    info_flags = zygiskd::GetProcessFlags(getpid());
-    if (info_flags & PROCESS_ON_DENYLIST) {
-        if (info_flags & PROCESS_ROOT_IS_KSU) {
-            cached_mountinfo = fill_ksu_umount_paths();
-        } else if (info_flags & PROCESS_ROOT_IS_APATCH){
-            cached_mountinfo = fill_apatch_umount_paths();
-        } else if (info_flags & PROCESS_ROOT_IS_MAGISK) {
-            cached_mountinfo = fill_magisk_umount_paths();
-        }
+    info_flags = zygiskd::GetProcessFlags(g_ctx->args.app->uid);
+    if (info_flags & PROCESS_IS_FIRST_STARTED) {
+        update_mnt_ns(Clean, true);
     }
 
     if ((info_flags & PROCESS_ON_DENYLIST) == PROCESS_ON_DENYLIST) {
@@ -715,8 +702,10 @@ void ZygiskContext::nativeForkSystemServer_post() {
 void ZygiskContext::nativeForkAndSpecialize_pre() {
     process = env->GetStringUTFChars(args.app->nice_name, nullptr);
     LOGV("pre forkAndSpecialize [%s]", process);
-
     flags[APP_FORK_AND_SPECIALIZE] = true;
+
+    update_mnt_ns(Clean, false);
+
     /* Zygisksu changed: No args.app->fds_to_ignore check since we are Android 10+ */
     if (logging::getfd() != -1) {
         exempted_fds.push_back(logging::getfd());

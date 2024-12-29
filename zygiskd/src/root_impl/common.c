@@ -127,17 +127,3 @@ bool uid_is_manager(uid_t uid) {
     }
   }
 }
-
-bool uid_is_systemui(uid_t uid) {
-  struct stat s;
-  if (stat("/data/user_de/0/com.android.systemui", &s) == -1) {
-    if (errno != ENOENT) {
-      LOGE("Failed to stat SystemUI data directory: %s\n", strerror(errno));
-    }
-    errno = 0;
-
-    return false;
-  }
-
-  return s.st_uid == uid;
-}
