@@ -35,4 +35,6 @@ bool uid_should_umount(uid_t uid);
 
 bool uid_is_manager(uid_t uid);
 
+bool uid_is_systemui(uid_t uid);
+
 #endif /* COMMON_H */

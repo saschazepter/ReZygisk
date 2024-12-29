@@ -137,6 +137,38 @@ DCL_HOOK_FUNC(int, fork) {
     return (g_ctx && g_ctx->pid >= 0) ? g_ctx->pid : old_fork();
 }
 
+void clean_mnt_ns() {
+    std::string path = zygiskd::GetCleanNamespace();
+    LOGI("Switching to clean namespace: %s", path.data());
+
+    if (path.empty()) {
+        LOGE("Failed to get clean namespace path");
+
+        return;
+    }
+
+    int nsfd = open(path.data(), O_RDONLY | O_CLOEXEC);
+    if (nsfd == -1) {
+        LOGE("Failed to open clean namespace: %s", strerror(errno));
+
+        return;
+    }
+
+    if (setns(nsfd, CLONE_NEWNS) == -1) {
+        LOGE("Failed to setns clean namespace: %s", strerror(errno));
+
+        close(nsfd);
+
+        return;
+    }
+
+    close(nsfd);
+
+    LOGD("Switched to clean namespace");
+
+    return;
+}
+
 // Unmount stuffs in the process's private mount namespace
 DCL_HOOK_FUNC(int, unshare, int flags) {
     int res = old_unshare(flags);
@@ -144,18 +176,13 @@ DCL_HOOK_FUNC(int, unshare, int flags) {
         // For some unknown reason, unmounting app_process in SysUI can break.
         // This is reproducible on the official AVD running API 26 and 27.
         // Simply avoid doing any unmounts for SysUI to avoid potential issues.
-        (g_ctx->info_flags & PROCESS_IS_SYS_UI) == 0) {
-        if (g_ctx->flags[DO_REVERT_UNMOUNT]) {
-            if (g_ctx->info_flags & PROCESS_ROOT_IS_KSU) {
-                revert_unmount_ksu();
-            } else if (g_ctx->info_flags & PROCESS_ROOT_IS_APATCH){
-                revert_unmount_apatch();
-            } else if (g_ctx->info_flags & PROCESS_ROOT_IS_MAGISK) {
-                revert_unmount_magisk();
-            }
-        }
+        (g_ctx->info_flags & PROCESS_IS_FIRST_STARTED) == 0) {
+        if (g_ctx->flags[DO_REVERT_UNMOUNT]) clean_mnt_ns();
+        else if (!(g_ctx->info_flags & (PROCESS_IS_MANAGER | PROCESS_GRANTED_ROOT)))
+            do_umount(cached_mountinfo);
 
         /* Zygisksu changed: No umount app_process */
+        old_unshare(CLONE_NEWNS);
 
         // Restore errno back to 0
         errno = 0;
@@ -599,7 +626,17 @@ void ZygiskContext::run_modules_post() {
 /* Zygisksu changed: Load module fds */
 void ZygiskContext::app_specialize_pre() {
     flags[APP_SPECIALIZE] = true;
-    info_flags = zygiskd::GetProcessFlags(g_ctx->args.app->uid);
+
+    info_flags = zygiskd::GetProcessFlags(getpid());
+    if (info_flags & PROCESS_ON_DENYLIST) {
+        if (info_flags & PROCESS_ROOT_IS_KSU) {
+            cached_mountinfo = fill_ksu_umount_paths();
+        } else if (info_flags & PROCESS_ROOT_IS_APATCH){
+            cached_mountinfo = fill_apatch_umount_paths();
+        } else if (info_flags & PROCESS_ROOT_IS_MAGISK) {
+            cached_mountinfo = fill_magisk_umount_paths();
+        }
+    }
 
     if ((info_flags & PROCESS_ON_DENYLIST) == PROCESS_ON_DENYLIST) {
       flags[DO_REVERT_UNMOUNT] = true;

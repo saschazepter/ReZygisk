@@ -260,4 +260,31 @@ namespace zygiskd {
       close(fd);
     } else info->running = false;
   }
+
+  std::string GetCleanNamespace() {
+    int fd = Connect(1);
+    if (fd == -1) {
+      PLOGE("GetCleanNamespace");
+
+      return "";
+    }
+
+    socket_utils::write_u8(fd, (uint8_t) SocketAction::GetCleanNamespace);
+    socket_utils::write_u32(fd, getpid());
+
+    uint32_t target_pid = socket_utils::read_u32(fd);
+    int target_fd = 0;
+
+    if (target_pid == 0) goto error;
+
+    target_fd = (int)socket_utils::read_u32(fd);
+    if (target_fd == 0) goto error;
+  
+    return "/proc/" + std::to_string(target_pid) + "/fd/" + std::to_string(target_fd);
+
+    error:
+      close(fd);
+
+      return "";
+  }
 }
