@@ -155,7 +155,12 @@ bool update_mnt_ns(enum mount_namespace_state mns_state, bool dry_run) {
     }
 
     LOGD("set mount namespace to [%s] fd=[%d]\n", ns_path.data(), updated_ns);
-    setns(updated_ns, CLONE_NEWNS);
+    if (setns(updated_ns, CLONE_NEWNS) == -1) {
+        PLOGE("Failed to set mount namespace [%s]", ns_path.data());
+        close(updated_ns);
+
+        return false;
+    }
 
     close(updated_ns);
 
@@ -170,10 +175,8 @@ DCL_HOOK_FUNC(int, unshare, int flags) {
         // This is reproducible on the official AVD running API 26 and 27.
         // Simply avoid doing any unmounts for SysUI to avoid potential issues.
         !g_ctx->flags[SERVER_FORK_AND_SPECIALIZE] && !(g_ctx->info_flags & PROCESS_IS_FIRST_STARTED)) {
-        if (g_ctx->info_flags & (PROCESS_IS_MANAGER | PROCESS_GRANTED_ROOT)) {
-            update_mnt_ns(Rooted, false);
-        } else if (!g_ctx->flags[DO_REVERT_UNMOUNT]) {
-            update_mnt_ns(Module, false);
+        if (g_ctx->flags[DO_REVERT_UNMOUNT]) {
+            update_mnt_ns(Clean, false);
         }
 
         old_unshare(CLONE_NEWNS);
@@ -625,12 +628,8 @@ void ZygiskContext::app_specialize_pre() {
     flags[APP_SPECIALIZE] = true;
 
     info_flags = zygiskd::GetProcessFlags(g_ctx->args.app->uid);
-    if (info_flags & PROCESS_IS_FIRST_STARTED) {
-        update_mnt_ns(Clean, true);
-    }
-
     if ((info_flags & PROCESS_ON_DENYLIST) == PROCESS_ON_DENYLIST) {
-      flags[DO_REVERT_UNMOUNT] = true;
+        flags[DO_REVERT_UNMOUNT] = true;
     }
 
     if ((info_flags & (PROCESS_IS_MANAGER | PROCESS_ROOT_IS_MAGISK)) == (PROCESS_IS_MANAGER | PROCESS_ROOT_IS_MAGISK)) {
@@ -703,8 +702,6 @@ void ZygiskContext::nativeForkAndSpecialize_pre() {
     process = env->GetStringUTFChars(args.app->nice_name, nullptr);
     LOGV("pre forkAndSpecialize [%s]", process);
     flags[APP_FORK_AND_SPECIALIZE] = true;
-
-    update_mnt_ns(Clean, false);
 
     /* Zygisksu changed: No args.app->fds_to_ignore check since we are Android 10+ */
     if (logging::getfd() != -1) {

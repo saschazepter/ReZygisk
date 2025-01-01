@@ -593,7 +593,13 @@ bool parse_mountinfo(const char *restrict pid, struct mountinfos *restrict mount
   return true;
 }
 
-void unmount_root(bool modules_only, struct root_impl impl) {
+enum mns_umount_state {
+  Complete,
+  NotComplete,
+  Error
+};
+
+enum mns_umount_state unmount_root(bool modules_only, struct root_impl impl) {
   /* INFO: We are already in the target pid mount namespace, so actually,
              when we use self here, we meant its pid.
   */
@@ -601,8 +607,15 @@ void unmount_root(bool modules_only, struct root_impl impl) {
   if (!parse_mountinfo("self", &mounts)) {
     LOGE("Failed to parse mountinfo\n");
 
-    return;
+    return Error;
   }
+
+  /* INFO: Implementations like Magisk Kitsune will mount MagiskSU when boot is completed,
+             so if we cache the clean mount done before the boot is completed, it will get
+             it mounted later and hence it will leak mounts. To avoid that we will detect
+             if implementation is Kitsune, and if so, see if /system/bin... is mounted,
+             if not, it won't cache this namespace. */
+  bool magiskSU_umounted = false;
 
   switch (impl.impl) {
     case None: { break; }
@@ -643,7 +656,7 @@ void unmount_root(bool modules_only, struct root_impl impl) {
       break;
     }
     case Magisk: {
-      LOGI("[Magisk] Unmounting root\n");
+      LOGI("[Magisk] Unmounting root %s modules\n", modules_only ? "only" : "with");
 
       for (size_t i = mounts.length - 1; i > 0; i--) {
         struct mountinfo mount = mounts.mounts[i];
@@ -652,8 +665,8 @@ void unmount_root(bool modules_only, struct root_impl impl) {
           (
             modules_only && 
             (
-              strncmp(mount.target, "/debug_ramdisk", strlen("/debug_ramdisk")) == 0 ||
               strcmp(mount.source, "magisk") == 0 ||
+              strncmp(mount.target, "/debug_ramdisk", strlen("/debug_ramdisk")) == 0 ||
               strncmp(mount.target, "/system/bin", strlen("/system/bin")) == 0
             )
           ) ||
@@ -661,10 +674,16 @@ void unmount_root(bool modules_only, struct root_impl impl) {
             !modules_only && 
             (
               strcmp(mount.source, "magisk") == 0 ||
-              strncmp(mount.root, "/adb/modules", strlen("/adb/modules")) == 0
+              strncmp(mount.target, "/debug_ramdisk", strlen("/debug_ramdisk")) == 0 ||
+              strncmp(mount.target, "/data/adb/modules", strlen("/data/adb/modules")) == 0 ||
+              strncmp(mount.root, "/adb/modules", strlen("/adb/modules")) == 0 ||
+              strncmp(mount.target, "/system/bin", strlen("/system/bin")) == 0
             )
           )
         ) {
+          if (impl.impl == Magisk && strncmp(mount.target, "/system/bin", strlen("/system/bin")) == 0)
+            magiskSU_umounted = true;
+
           if (umount2(mount.target, MNT_DETACH) == -1) {
             LOGE("[Magisk] Failed to unmount %s: %s\n", mount.target, strerror(errno));
 
@@ -672,6 +691,8 @@ void unmount_root(bool modules_only, struct root_impl impl) {
           }
 
           LOGI("[Magisk] Unmounted %s\n", mount.target);
+        } else {
+          LOGI("[Magisk] Skipped unmounting %s (%s | %s)\n", mount.target, mount.root, mount.source);
         }
       }
     }
@@ -679,7 +700,7 @@ void unmount_root(bool modules_only, struct root_impl impl) {
 
   free_mounts(&mounts);
 
-  return;
+  return (impl.impl == Magisk && !magiskSU_umounted) ? NotComplete : Complete;
 }
 
 int save_mns_fd(int pid, enum MountNamespaceState mns_state, struct root_impl impl) {
@@ -692,8 +713,6 @@ int save_mns_fd(int pid, enum MountNamespaceState mns_state, struct root_impl im
   if (mns_state == Clean && clean_namespace_fd != 0) return clean_namespace_fd;
   if (mns_state == Rooted && rooted_namespace_fd != 0) return rooted_namespace_fd;
   if (mns_state == Module && module_namespace_fd != 0) return module_namespace_fd;
-
-  LOGI(" - Creating socketpair\n");
 
   int sockets[2];
   if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockets) == -1) {
@@ -709,22 +728,35 @@ int save_mns_fd(int pid, enum MountNamespaceState mns_state, struct root_impl im
   if (fork_pid == 0) {
     switch_mount_namespace(pid);
 
+    enum mns_umount_state umount_state = Complete;
+
     if (mns_state != Rooted) {
       unshare(CLONE_NEWNS);
-      unmount_root(mns_state == Module, impl);
+      umount_state = unmount_root(mns_state == Module, impl);
+      if (umount_state == Error) {
+        write_uint8_t(writer, (uint8_t)umount_state);
+
+        _exit(1);
+      }
     }
 
     uint32_t mypid = 0;
     while (mypid != (uint32_t)getpid()) {
-      write_uint32_t(writer, 0);
+      write_uint8_t(writer, (uint8_t)umount_state);
       usleep(50);
       read_uint32_t(reader, &mypid);
     }
 
     _exit(0);
   } else if (fork_pid > 0) {
-    uint32_t _ = 0;
-    read_uint32_t(reader, &_);
+    enum mns_umount_state umount_state = (enum mns_umount_state)0;
+    read_uint8_t(reader, (uint8_t *)&umount_state);
+
+    if (umount_state == Error) {
+      LOGE("Failed to unmount root\n");
+
+      return -1;
+    }
 
     char ns_path[PATH_MAX];
     snprintf(ns_path, PATH_MAX, "/proc/%d/ns/mnt", fork_pid);
@@ -759,8 +791,9 @@ int save_mns_fd(int pid, enum MountNamespaceState mns_state, struct root_impl im
     LOGI(" - Forked child exited\n");
 
     if (mns_state == Rooted) return (rooted_namespace_fd = ns_fd);
-    else if (mns_state == Clean) return (clean_namespace_fd = ns_fd);
-    else if (mns_state == Module) return (module_namespace_fd = ns_fd);
+    else if (mns_state == Clean && umount_state == Complete) return (clean_namespace_fd = ns_fd);
+    else if (mns_state == Module && umount_state == Complete) return (module_namespace_fd = ns_fd);
+    else return ns_fd;
   } else {
     LOGE("fork: %s\n", strerror(errno));
 
