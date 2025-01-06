@@ -191,7 +191,7 @@ int unix_listener_from_path(char *restrict path) {
     return -1;
   }
 
-  if (chcon(path, "u:object_r:magisk_file:s0") == -1) {
+  if (chcon(path, "u:object_r:zygisk_file:s0") == -1) {
     LOGE("chcon: %s\n", strerror(errno));
 
     return -1;
