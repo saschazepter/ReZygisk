@@ -22,7 +22,7 @@
 #include "files.hpp"
 #include "misc.hpp"
 
-#include "solist.hpp"
+#include "solist.h"
 
 #include "art_method.hpp"
 
@@ -770,8 +770,11 @@ static void hook_register(dev_t dev, ino_t inode, const char *symbol, void *new_
 void clean_trace(const char* path, size_t load, size_t unload, bool spoof_maps) {
     LOGD("cleaning trace for path %s", path);
 
-    if (load > 0 || unload >0) SoList::ResetCounters(load, unload);
-    bool path_found = SoList::DropSoPath(path);
+    if (load > 0 || unload > 0) solist_reset_counters(load, unload);
+
+    LOGI("Dropping solist record for %s", path);
+
+    bool path_found = solist_drop_so_path(path);
     if (!path_found || !spoof_maps) return;
 
     LOGD("spoofing virtual maps for %s", path);

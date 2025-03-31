@@ -1,263 +1,376 @@
-/*
- * This file is part of LSPosed.
- *
- * LSPosed is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * LSPosed is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with LSPosed.  If not, see <https://www.gnu.org/licenses/>.
- *
- * Copyright (C) 2019 Swift Gan
- * Copyright (C) 2021 LSPosed Contributors
- */
-#include <malloc.h>
-#include <cstring>
-#include <sys/mman.h>
+/* INFO: This file is written in C99. The cpp extension is just for convention
+           and will be changed later. */
+
+#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
 #include <fcntl.h>
-#include <unistd.h>
-#include <cassert>
+#include <sys/mman.h>
 #include <sys/stat.h>
+
+#include <unistd.h>
+
+#include "logging.h"
+
 #include "elf_util.h"
 
-using namespace SandHook;
+#define SHT_GNU_HASH 0x6ffffff6
 
-template<typename T>
-inline constexpr auto offsetOf(ElfW(Ehdr) *head, ElfW(Off) off) {
-    return reinterpret_cast<std::conditional_t<std::is_pointer_v<T>, T, T *>>(
-            reinterpret_cast<uintptr_t>(head) + off);
+uint32_t ElfHash(const char *name) {
+  uint32_t h = 0, g = 0;
+  while (*name) {
+    h = (h << 4) + (unsigned char)(*name++);
+    g = h & 0xf0000000;
+
+    if (g) {
+      h ^= g >> 24;
+    }
+
+    h &= ~g;
+  }
+  return h;
 }
 
-ElfImg::ElfImg(std::string_view base_name) : elf(base_name) {
-    if (!findModuleBase()) {
-        base = nullptr;
-        return;
-    }
-
-    //load elf
-    int fd = open(elf.data(), O_RDONLY);
-    if (fd < 0) {
-        // LOGE("failed to open %s", elf.data());
-        return;
-    }
-
-    size = lseek(fd, 0, SEEK_END);
-    if (size <= 0) {
-        // LOGE("lseek() failed for %s", elf.data());
-    }
-
-    header = reinterpret_cast<decltype(header)>(mmap(nullptr, size, PROT_READ, MAP_SHARED, fd, 0));
-
-    close(fd);
-
-    section_header = offsetOf<decltype(section_header)>(header, header->e_shoff);
-
-    auto shoff = reinterpret_cast<uintptr_t>(section_header);
-    char *section_str = offsetOf<char *>(header, section_header[header->e_shstrndx].sh_offset);
-
-    for (int i = 0; i < header->e_shnum; i++, shoff += header->e_shentsize) {
-        auto *section_h = (ElfW(Shdr) *) shoff;
-        char *sname = section_h->sh_name + section_str;
-        auto entsize = section_h->sh_entsize;
-        switch (section_h->sh_type) {
-            case SHT_DYNSYM: {
-                if (bias == -4396) {
-                    dynsym = section_h;
-                    dynsym_offset = section_h->sh_offset;
-                    dynsym_start = offsetOf<decltype(dynsym_start)>(header, dynsym_offset);
-                }
-                break;
-            }
-            case SHT_SYMTAB: {
-                if (strcmp(sname, ".symtab") == 0) {
-                    symtab = section_h;
-                    symtab_offset = section_h->sh_offset;
-                    symtab_size = section_h->sh_size;
-                    symtab_count = symtab_size / entsize;
-                    symtab_start = offsetOf<decltype(symtab_start)>(header, symtab_offset);
-                }
-                break;
-            }
-            case SHT_STRTAB: {
-                if (bias == -4396) {
-                    strtab = section_h;
-                    symstr_offset = section_h->sh_offset;
-                    strtab_start = offsetOf<decltype(strtab_start)>(header, symstr_offset);
-                }
-                if (strcmp(sname, ".strtab") == 0) {
-                    symstr_offset_for_symtab = section_h->sh_offset;
-                }
-                break;
-            }
-            case SHT_PROGBITS: {
-                if (strtab == nullptr || dynsym == nullptr) break;
-                if (bias == -4396) {
-                    bias = (off_t) section_h->sh_addr - (off_t) section_h->sh_offset;
-                }
-                break;
-            }
-            case SHT_HASH: {
-                auto *d_un = offsetOf<ElfW(Word)>(header, section_h->sh_offset);
-                nbucket_ = d_un[0];
-                bucket_ = d_un + 2;
-                chain_ = bucket_ + nbucket_;
-                break;
-            }
-            case SHT_GNU_HASH: {
-                auto *d_buf = reinterpret_cast<ElfW(Word) *>(((size_t) header) +
-                                                             section_h->sh_offset);
-                gnu_nbucket_ = d_buf[0];
-                gnu_symndx_ = d_buf[1];
-                gnu_bloom_size_ = d_buf[2];
-                gnu_shift2_ = d_buf[3];
-                gnu_bloom_filter_ = reinterpret_cast<decltype(gnu_bloom_filter_)>(d_buf + 4);
-                gnu_bucket_ = reinterpret_cast<decltype(gnu_bucket_)>(gnu_bloom_filter_ +
-                                                                      gnu_bloom_size_);
-                gnu_chain_ = gnu_bucket_ + gnu_nbucket_ - gnu_symndx_;
-                break;
-            }
-        }
-    }
+uint32_t GnuHash(const char *name) {
+  uint32_t h = 5381;
+  while (*name) {
+    h = (h << 5) + h + (unsigned char)(*name++);
+  }
+  return h;
 }
 
-ElfW(Addr) ElfImg::ElfLookup(std::string_view name, uint32_t hash) const {
-    if (nbucket_ == 0) return 0;
+ElfW(Shdr) *offsetOf_Shdr(ElfW(Ehdr) * head, ElfW(Off) off) {
+  return (ElfW(Shdr) *)(((uintptr_t)head) + off);
+}
 
-    char *strings = (char *) strtab_start;
+char *offsetOf_char(ElfW(Ehdr) * head, ElfW(Off) off) {
+  return (char *)(((uintptr_t)head) + off);
+}
 
-    for (auto n = bucket_[hash % nbucket_]; n != 0; n = chain_[n]) {
-        auto *sym = dynsym_start + n;
-        if (name == strings + sym->st_name) {
-            return sym->st_value;
-        }
+ElfW(Sym) *offsetOf_Sym(ElfW(Ehdr) * head, ElfW(Off) off) {
+  return (ElfW(Sym) *)(((uintptr_t)head) + off);
+}
+
+ElfW(Word) *offsetOf_Word(ElfW(Ehdr) * head, ElfW(Off) off) {
+  return (ElfW(Word) *)(((uintptr_t)head) + off);
+}
+
+int dl_cb(struct dl_phdr_info *info, size_t size, void *data) {
+  (void) size;
+
+  if ((info)->dlpi_name == NULL) return 0;
+
+  ElfImg *img = (ElfImg *)data;
+
+  if (strstr(info->dlpi_name, img->elf)) {  
+    img->elf = strdup(info->dlpi_name);
+    img->base = (void *)info->dlpi_addr;
+
+    return 1;
+  }
+
+  return 0;
+}
+
+bool find_module_base(ElfImg *img) {
+  dl_iterate_phdr(dl_cb, img);
+
+  return img->base != NULL;
+}
+
+size_t calculate_valid_symtabs_amount(ElfImg *img) {
+  size_t count = 0;
+
+  if (img->symtab_start == NULL || img->symstr_offset_for_symtab == 0) return count;
+
+  for (ElfW(Off) i = 0; i < img->symtab_count; i++) {
+    unsigned int st_type = ELF_ST_TYPE(img->symtab_start[i].st_info);
+
+    if ((st_type == STT_FUNC || st_type == STT_OBJECT) && img->symtab_start[i].st_size)
+      count++;
+  }
+
+  return count;
+}
+
+void ElfImg_destroy(ElfImg *img) {
+  if (img->elf) {
+    free(img->elf);
+    img->elf = NULL;
+  }
+
+  if (img->header) {
+    munmap(img->header, img->size);
+    img->header = NULL;
+  }
+
+  if (img->symtabs_) {
+    for (size_t i = 0; i < img->symtab_count; i++) {
+      free(img->symtabs_[i].name);
     }
+
+    free(img->symtabs_);
+    img->symtabs_ = NULL;
+  }
+
+  free(img);
+  img = NULL;
+}
+
+ElfImg *ElfImg_create(const char *elf) {
+  ElfImg *img = (ElfImg *)calloc(1, sizeof(ElfImg));
+  if (!img) {
+    LOGE("Failed to allocate memory for ElfImg");
+
+    return NULL;
+  }
+
+  img->bias = -4396;
+  img->elf = strdup(elf);
+  img->base = NULL;
+
+  if (!find_module_base(img)) {
+    LOGE("Failed to find module base for %s", img->elf);
+
+    ElfImg_destroy(img);
+
+    return NULL;
+  }
+
+  int fd = open(img->elf, O_RDONLY);
+  if (fd < 0) {
+    LOGE("failed to open %s", img->elf);
+
+    ElfImg_destroy(img);
+
+    return NULL;
+  }
+
+  img->size = lseek(fd, 0, SEEK_END);
+  if (img->size <= 0) {
+    LOGE("lseek() failed for %s", img->elf);
+
+    ElfImg_destroy(img);
+
+    return NULL;
+  }
+
+  img->header = (ElfW(Ehdr) *)mmap(NULL, img->size, PROT_READ, MAP_SHARED, fd, 0);
+
+  close(fd);
+
+  img->section_header = offsetOf_Shdr(img->header, img->header->e_shoff);
+
+  uintptr_t shoff = (uintptr_t)img->section_header;
+  char *section_str = offsetOf_char(img->header, img->section_header[img->header->e_shstrndx].sh_offset);
+
+  for (int i = 0; i < img->header->e_shnum; i++, shoff += img->header->e_shentsize) {
+    ElfW(Shdr) *section_h = (ElfW(Shdr *))shoff;
+
+    char *sname = section_h->sh_name + section_str;
+    size_t entsize = section_h->sh_entsize;
+
+    switch (section_h->sh_type) {
+      case SHT_DYNSYM: {
+        if (img->bias == -4396) {
+          img->dynsym = section_h;
+          img->dynsym_offset = section_h->sh_offset;
+          img->dynsym_start = offsetOf_Sym(img->header, img->dynsym_offset);
+        }
+
+        break;
+      }
+      case SHT_SYMTAB: {
+        if (strcmp(sname, ".symtab") == 0) {
+          img->symtab = section_h;
+          img->symtab_offset = section_h->sh_offset;
+          img->symtab_size = section_h->sh_size;
+          img->symtab_count = img->symtab_size / entsize;
+          img->symtab_start = offsetOf_Sym(img->header, img->symtab_offset);
+        }
+
+        break;
+      }
+      case SHT_STRTAB: {
+        if (img->bias == -4396) {
+          img->strtab = section_h;
+          img->symstr_offset = section_h->sh_offset;
+          img->strtab_start = offsetOf_Sym(img->header, img->symstr_offset);
+        }
+
+        if (strcmp(sname, ".strtab") == 0) {
+          img->symstr_offset_for_symtab = section_h->sh_offset;
+        }
+
+        break;
+      }
+      case SHT_PROGBITS: {
+        if (img->strtab == NULL || img->dynsym == NULL)
+          break;
+
+        if (img->bias == -4396) {
+          img->bias = (off_t)section_h->sh_addr - (off_t)section_h->sh_offset;
+        }
+
+        break;
+      }
+      case SHT_HASH: {
+        ElfW(Word) *d_un = offsetOf_Word(img->header, section_h->sh_offset);
+        img->nbucket_ = d_un[0];
+        img->bucket_ = d_un + 2;
+        img->chain_ = img->bucket_ + img->nbucket_;
+
+        break;
+      }
+      case SHT_GNU_HASH: {
+        ElfW(Word) *d_buf = (ElfW(Word) *)(((size_t)img->header) + section_h->sh_offset);
+        img->gnu_nbucket_ = d_buf[0];
+        img->gnu_symndx_ = d_buf[1];
+        img->gnu_bloom_size_ = d_buf[2];
+        img->gnu_shift2_ = d_buf[3];
+        img->gnu_bloom_filter_ = (uintptr_t *)(d_buf + 4);
+        img->gnu_bucket_ = (uint32_t *)(img->gnu_bloom_filter_ + img->gnu_bloom_size_);
+        img->gnu_chain_ = img->gnu_bucket_ + img->gnu_nbucket_ - img->gnu_symndx_;
+
+        break;
+      }
+    }
+  }
+
+  return img;
+}
+
+ElfW(Addr) getSymbOffset(ElfImg *img, const char *name) {
+  ElfW(Addr) offset = GnuLookup(img, name, GnuHash(name));
+  if (offset > 0) return offset;
+
+  offset = ElfLookup(img, name, ElfHash(name));
+  if (offset > 0) return offset;
+
+  offset = LinearLookup(img, name);
+  if (offset > 0) return offset;
+
+  return 0;
+}
+
+ElfW(Addr) getSymbAddress(ElfImg *img, const char *name) {
+  ElfW(Addr) offset = getSymbOffset(img, name);
+
+  if (offset > 0 && img->base != NULL) {
+    return ((uintptr_t)img->base + offset - img->bias);
+  } else {
     return 0;
+  }
 }
 
-ElfW(Addr) ElfImg::GnuLookup(std::string_view name, uint32_t hash) const {
-    static constexpr auto bloom_mask_bits = sizeof(ElfW(Addr)) * 8;
-
-    if (gnu_nbucket_ == 0 || gnu_bloom_size_ == 0) return 0;
-
-    auto bloom_word = gnu_bloom_filter_[(hash / bloom_mask_bits) % gnu_bloom_size_];
-    uintptr_t mask = 0
-                     | (uintptr_t) 1 << (hash % bloom_mask_bits)
-                     | (uintptr_t) 1 << ((hash >> gnu_shift2_) % bloom_mask_bits);
-    if ((mask & bloom_word) == mask) {
-        auto sym_index = gnu_bucket_[hash % gnu_nbucket_];
-        if (sym_index >= gnu_symndx_) {
-            char *strings = (char *) strtab_start;
-            do {
-                auto *sym = dynsym_start + sym_index;
-                if (((gnu_chain_[sym_index] ^ hash) >> 1) == 0
-                    && name == strings + sym->st_name) {
-                    return sym->st_value;
-                }
-            } while ((gnu_chain_[sym_index++] & 1) == 0);
-        }
-    }
+ElfW(Addr) ElfLookup(ElfImg *restrict img, const char *restrict name, uint32_t hash) {
+  if (img->nbucket_ == 0)
     return 0;
+
+  char *strings = (char *)img->strtab_start;
+
+  for (size_t n = img->bucket_[hash % img->nbucket_]; n != 0; n = img->chain_[n]) {
+    ElfW(Sym) *sym = img->dynsym_start + n;
+
+    if (strncmp(name, strings + sym->st_name, strlen(name)) == 0)
+      return sym->st_value;
+  }
+  return 0;
 }
 
-ElfW(Addr) ElfImg::LinearLookup(std::string_view name) const {
-    if (symtabs_.empty()) {
-        symtabs_.reserve(symtab_count);
-        if (symtab_start != nullptr && symstr_offset_for_symtab != 0) {
-            for (ElfW(Off) i = 0; i < symtab_count; i++) {
-                unsigned int st_type = ELF_ST_TYPE(symtab_start[i].st_info);
-                const char *st_name = offsetOf<const char *>(header, symstr_offset_for_symtab +
-                                                                     symtab_start[i].st_name);
-                if ((st_type == STT_FUNC || st_type == STT_OBJECT) && symtab_start[i].st_size) {
-                    symtabs_.emplace(st_name, &symtab_start[i]);
-                }
-            }
-        }
-    }
+ElfW(Addr) GnuLookup(ElfImg *restrict img, const char *name, uint32_t hash) {
+  static size_t bloom_mask_bits = sizeof(ElfW(Addr)) * 8;
 
-    if (auto i = symtabs_.find(name); i != symtabs_.end()) {
-        return i->second->st_value;
-    } else {
-        return 0;
-    }
-}
-
-ElfW(Addr) ElfImg::LinearLookupByPrefix(std::string_view name) const {
-    if (symtabs_.empty()) {
-        symtabs_.reserve(symtab_count);
-        if (symtab_start != nullptr && symstr_offset_for_symtab != 0) {
-            for (ElfW(Off) i = 0; i < symtab_count; i++) {
-                unsigned int st_type = ELF_ST_TYPE(symtab_start[i].st_info);
-                const char *st_name = offsetOf<const char *>(header, symstr_offset_for_symtab +
-                                                                     symtab_start[i].st_name);
-                if ((st_type == STT_FUNC || st_type == STT_OBJECT) && symtab_start[i].st_size) {
-                    symtabs_.emplace(st_name, &symtab_start[i]);
-                }
-            }
-        }
-    }
-
-    auto size = name.size();
-    for (auto symtab : symtabs_) {
-        if (symtab.first.size() < size) continue;
-
-        if (symtab.first.substr(0, size) == name) {
-            return symtab.second->st_value;
-        }
-    }
-
+  if (img->gnu_nbucket_ == 0 || img->gnu_bloom_size_ == 0)
     return 0;
-}
 
+  size_t bloom_word =
+      img->gnu_bloom_filter_[(hash / bloom_mask_bits) % img->gnu_bloom_size_];
+  uintptr_t mask = 0 | (uintptr_t)1 << (hash % bloom_mask_bits) |
+                   (uintptr_t)1 << ((hash >> img->gnu_shift2_) % bloom_mask_bits);
+  if ((mask & bloom_word) == mask) {
+    size_t sym_index = img->gnu_bucket_[hash % img->gnu_nbucket_];
+    if (sym_index >= img->gnu_symndx_) {
+      char *strings = (char *)img->strtab_start;
+      do {
+        ElfW(Sym) *sym = img->dynsym_start + sym_index;
 
-ElfImg::~ElfImg() {
-    //open elf file local
-    if (buffer) {
-        free(buffer);
-        buffer = nullptr;
-    }
-    //use mmap
-    if (header) {
-        munmap(header, size);
-    }
-}
-
-ElfW(Addr) ElfImg::getSymbOffset(std::string_view name, uint32_t gnu_hash, uint32_t elf_hash) const {
-    if (auto offset = GnuLookup(name, gnu_hash); offset > 0) {
-        // LOGD("found %s %p in %s in dynsym by gnuhash", name.data(), reinterpret_cast<void *>(offset), elf.data());
-        return offset;
-    } else if (offset = ElfLookup(name, elf_hash); offset > 0) {
-        // LOGD("found %s %p in %s in dynsym by elfhash", name.data(), reinterpret_cast<void *>(offset), elf.data());
-        return offset;
-    } else if (offset = LinearLookup(name); offset > 0) {
-        // LOGD("found %s %p in %s in symtab by linear lookup", name.data(), reinterpret_cast<void *>(offset), elf.data());
-        return offset;
-    } else {
-        return 0;
-    }
-
-}
-
-bool ElfImg::findModuleBase() {
-    dl_iterate_phdr([](struct dl_phdr_info *info, size_t size, void *data) -> int {
-        (void) size;
-
-        if ((info)->dlpi_name == nullptr) {
-            return 0;
+        if (((img->gnu_chain_[sym_index] ^ hash) >> 1) == 0 &&
+            name == strings + sym->st_name) {
+          return sym->st_value;
         }
+      } while ((img->gnu_chain_[sym_index++] & 1) == 0);
+    }
+  }
 
-        auto *self = reinterpret_cast<ElfImg *>(data);
-        if (strstr(info->dlpi_name, self->elf.data())) {
-            self->elf = info->dlpi_name;
-            self->base = reinterpret_cast<void *>(info->dlpi_addr);
-            return 1;
+  return 0;
+}
+
+ElfW(Addr) LinearLookup(ElfImg *img, const char *restrict name) {
+  size_t valid_symtabs_amount = calculate_valid_symtabs_amount(img);
+  if (valid_symtabs_amount == 0) return 0;
+
+  if (!img->symtabs_) {
+    img->symtabs_ = (struct symtabs *)calloc(1, sizeof(struct symtabs) * valid_symtabs_amount);
+    if (!img->symtabs_) return 0;
+
+
+    if (img->symtab_start != NULL && img->symstr_offset_for_symtab != 0) {
+      ElfW(Off) i = 0;
+      for (ElfW(Off) pos = 0; pos < img->symtab_count; pos++) {
+        unsigned int st_type = ELF_ST_TYPE(img->symtab_start[pos].st_info);
+        const char *st_name = offsetOf_char(img->header, img->symstr_offset_for_symtab + img->symtab_start[pos].st_name);
+
+        if ((st_type == STT_FUNC || st_type == STT_OBJECT) && img->symtab_start[pos].st_size) {
+          img->symtabs_[i].name = strdup(st_name);
+          img->symtabs_[i].sym = &img->symtab_start[pos];
+
+          i++;
         }
-        return 0;
-    }, this);
-    return base != 0;
+      }
+    }
+  }
+
+  for (size_t i = 0; i < valid_symtabs_amount; i++) {
+    if (strcmp(name, img->symtabs_[i].name) != 0) continue;
+
+    return img->symtabs_[i].sym->st_value;
+  }
+
+  return 0;
+}
+
+ElfW(Addr) LinearLookupByPrefix(ElfImg *img, const char *name) {
+  size_t valid_symtabs_amount = calculate_valid_symtabs_amount(img);
+  if (valid_symtabs_amount == 0) return 0;
+
+  if (!img->symtabs_) {
+    img->symtabs_ = (struct symtabs *)malloc(sizeof(struct symtabs) * valid_symtabs_amount);
+    if (!img->symtabs_) return 0;
+
+    if (img->symtab_start != NULL && img->symstr_offset_for_symtab != 0) {
+      ElfW(Off) i = 0;
+      for (ElfW(Off) pos = 0; pos < img->symtab_count; pos++) {
+        unsigned int st_type = ELF_ST_TYPE(img->symtab_start[pos].st_info);
+        const char *st_name = offsetOf_char(img->header, img->symstr_offset_for_symtab + img->symtab_start[pos].st_name);
+
+        if ((st_type == STT_FUNC || st_type == STT_OBJECT) && img->symtab_start[pos].st_size) {
+          img->symtabs_[i].name = strdup(st_name);
+          img->symtabs_[i].sym = &img->symtab_start[pos];
+
+          i++;
+        }
+      }
+    }
+  }
+
+  for (size_t i = 0; i < valid_symtabs_amount; i++) {
+    if (strlen(img->symtabs_[i].name) < strlen(name))
+      continue;
+
+    if (strncmp(img->symtabs_[i].name, name, strlen(name)) == 0)
+      return img->symtabs_[i].sym->st_value;
+  }
+
+  return 0;
 }
