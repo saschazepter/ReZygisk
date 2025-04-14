@@ -181,8 +181,6 @@ DCL_HOOK_FUNC(int, unshare, int flags) {
             update_mnt_ns(Rooted, false);
         } else if (!(g_ctx->flags[DO_REVERT_UNMOUNT])) {
             update_mnt_ns(Module, false);
-        } else {
-            LOGI("Process [%s] is on denylist, skipping unmount", g_ctx->process);
         }
 
         old_unshare(CLONE_NEWNS);
@@ -636,6 +634,7 @@ void ZygiskContext::run_modules_pre() {
 
   for (auto &m : modules) {
     m.onLoad(env);
+
     if (flags[APP_SPECIALIZE]) m.preAppSpecialize(args.app);
     else if (flags[SERVER_FORK_AND_SPECIALIZE]) m.preServerSpecialize(args.server);
   }
@@ -818,7 +817,7 @@ void clean_trace(const char* path, size_t load, size_t unload, bool spoof_maps) 
 
     if (load > 0 || unload > 0) solist_reset_counters(load, unload);
 
-    LOGI("Dropping solist record for %s", path);
+    LOGD("Dropping solist record for %s", path);
 
     bool path_found = solist_drop_so_path(path);
     if (!path_found || !spoof_maps) return;

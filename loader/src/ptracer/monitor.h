@@ -1,5 +1,5 @@
-#ifndef MAIN_HPP
-#define MAIN_HPP
+#ifndef MONITOR_H
+#define MONITOR_H
 
 #include <stdbool.h>
 
@@ -24,4 +24,4 @@ enum Command {
 
 int send_control_command(enum Command cmd);
 
-#endif /* MAIN_HPP */
+#endif /* MONITOR_H */
