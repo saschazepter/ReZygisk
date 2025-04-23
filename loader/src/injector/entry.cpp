@@ -1,27 +1,26 @@
 #include "daemon.h"
 #include "logging.h"
 #include "zygisk.hpp"
-#include "module.hpp"
 
 using namespace std;
 
-void *self_handle = nullptr;
+void *start_addr = nullptr;
+size_t block_size = 0;
 
 extern "C" [[gnu::visibility("default")]]
-void entry(void* handle, const char* path) {
-    LOGI("Zygisk library injected, version %s", ZKSU_VERSION);
-    self_handle = handle;
-    zygiskd::Init(path);
+void entry(void* addr, size_t size, const char* path) {
+    LOGD("Zygisk library injected, version %s", ZKSU_VERSION);
 
-    if (!zygiskd::PingHeartbeat()) {
+    start_addr = addr;
+    block_size = size;
+
+    if (!rezygiskd_ping()) {
         LOGE("Zygisk daemon is not running");
+
         return;
     }
 
-#ifdef NDEBUG
-    logging::setfd(zygiskd::RequestLogcatFd());
-#endif
-
-    LOGI("Start hooking");
+    LOGD("start plt hooking");
     hook_functions();
+    clean_trace(path, 1, 0, false);
 }

@@ -26,6 +26,8 @@ val ccachePath by lazy {
 }
 
 val defaultCFlags = arrayOf(
+    "-D_GNU_SOURCE",
+
     "-Wall", "-Wextra",
     "-fno-rtti", "-fno-exceptions",
     "-fno-stack-protector", "-fomit-frame-pointer",
@@ -49,12 +51,14 @@ android {
 
     externalNativeBuild.cmake {
         path("src/CMakeLists.txt")
+        buildStagingDirectory = layout.buildDirectory.get().asFile
     }
 
     defaultConfig {
         externalNativeBuild.cmake {
             arguments += "-DANDROID_STL=none"
             arguments += "-DLSPLT_STANDALONE=ON"
+            arguments += "-DCMAKE_BUILD_PARALLEL_LEVEL=${Runtime.getRuntime().availableProcessors()}"
             cFlags("-std=c18", *defaultCFlags)
             cppFlags("-std=c++20", *defaultCFlags)
             ccachePath?.let {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstring>
 #include <dlfcn.h>
 #include "api.hpp"
 
@@ -125,13 +126,13 @@ namespace {
         PROCESS_GRANTED_ROOT = zygisk::StateFlag::PROCESS_GRANTED_ROOT,
         PROCESS_ON_DENYLIST = zygisk::StateFlag::PROCESS_ON_DENYLIST,
 
-        PROCESS_IS_MANAGER = (1u << 28),
-        PROCESS_ROOT_IS_APATCH = (1u << 27),
+        PROCESS_IS_MANAGER = (1u << 27),
+        PROCESS_ROOT_IS_APATCH = (1u << 28),
         PROCESS_ROOT_IS_KSU = (1u << 29),
         PROCESS_ROOT_IS_MAGISK = (1u << 30),
-        PROCESS_IS_SYS_UI = (1u << 31),
+        PROCESS_IS_FIRST_STARTED = (1u << 31),
 
-        PRIVATE_MASK = PROCESS_IS_SYS_UI
+        PRIVATE_MASK = PROCESS_IS_FIRST_STARTED
     };
 
     struct api_abi_base {
@@ -209,7 +210,7 @@ case 5:                                \
         int getModuleDir() const;
         void setOption(zygisk::Option opt);
         static uint32_t getFlags();
-        void tryUnload() const { if (unload) dlclose(handle); }
+        bool tryUnload() const { return unload && dlclose(handle) == 0; };
         void clearApi() { memset(&api, 0, sizeof(api)); }
         int getId() const { return id; }
 

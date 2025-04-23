@@ -9,12 +9,18 @@
 #define CONCAT_(x,y) x##y
 #define CONCAT(x,y) CONCAT_(x,y)
 
-#define LOGI(...)                                                                           \
-  __android_log_print(ANDROID_LOG_INFO, lp_select("zygiskd32", "zygiskd64"), __VA_ARGS__);  \
+#define LOG_TAG lp_select("zygiskd32", "zygiskd64")
+
+#define LOGI(...)                                              \
+  __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__); \
   printf(__VA_ARGS__);
 
-#define LOGE(...)                                                                            \
-  __android_log_print(ANDROID_LOG_ERROR , lp_select("zygiskd32", "zygiskd64"), __VA_ARGS__); \
+#define LOGW(...)                                                \
+  __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__);   \
+  printf(__VA_ARGS__);
+
+#define LOGE(...)                                                \
+  __android_log_print(ANDROID_LOG_ERROR , LOG_TAG, __VA_ARGS__); \
   printf(__VA_ARGS__);
 
 #define ASSURE_SIZE_WRITE(area_name, subarea_name, sent_size, expected_size)                                     \
@@ -59,7 +65,7 @@
     return -1;                                                                                                   \
   }
 
-#define write_func_def(type)               \
+#define write_func_def(type)              \
   ssize_t write_## type(int fd, type val)
 
 #define read_func_def(type)               \
@@ -80,9 +86,6 @@ int unix_listener_from_path(char *path);
 ssize_t write_fd(int fd, int sendfd);
 int read_fd(int fd);
 
-write_func_def(int);
-read_func_def(int);
-
 write_func_def(size_t);
 read_func_def(size_t);
 
@@ -94,7 +97,7 @@ read_func_def(uint8_t);
 
 ssize_t write_string(int fd, const char *restrict str);
 
-ssize_t read_string(int fd, char *restrict str, size_t len);
+ssize_t read_string(int fd, char *restrict buf, size_t buf_size);
 
 bool exec_command(char *restrict buf, size_t len, const char *restrict file, char *const argv[]);
 
@@ -103,5 +106,7 @@ bool check_unix_socket(int fd, bool block);
 int non_blocking_execv(const char *restrict file, char *const argv[]);
 
 void stringify_root_impl_name(struct root_impl impl, char *restrict output);
+
+int save_mns_fd(int pid, enum MountNamespaceState mns_state, struct root_impl impl);
 
 #endif /* UTILS_H */
