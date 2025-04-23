@@ -26,7 +26,6 @@
     "home": {
       "header": "Trang Chủ",
       "status": {
-        "unknown": "Không xác định",
         "notWorking": "Không hoạt động",
         "ok": "Đang hoạt động",
         "partially": "Đang hoạt động một phần"

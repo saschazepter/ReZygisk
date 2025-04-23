@@ -26,7 +26,6 @@
     "home": {
       "header": "Acasă",
       "status": {
-        "unknown": "Necunoscut",
         "notWorking": "Nu funcționează",
         "ok": "Funcționează",
         "partially": "Funcționează parțial"

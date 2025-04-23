@@ -26,7 +26,6 @@
     "home": {
       "header": "Beranda",
       "status": {
-        "unknown": "Tidak diketahui",
         "notWorking": "Tidak Bekerja",
         "ok": "Bekerja",
         "partially": "Bekerja Sebagian"

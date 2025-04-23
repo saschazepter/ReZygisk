@@ -26,7 +26,6 @@
     "home": {
       "header": "首頁",
       "status": {
-        "unknown": "未知",
         "notWorking": "未運作",
         "ok": "運作中",
         "partially": "部分運作"

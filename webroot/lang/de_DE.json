@@ -26,7 +26,6 @@
     "home": {
       "header": "Startseite",
       "status": {
-        "unknown": "Unbekannt",
         "notWorking": "Funktioniert nicht",
         "ok": "Funktioniert",
         "partially": "Funktioniert zum Teil"

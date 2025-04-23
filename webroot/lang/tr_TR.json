@@ -26,7 +26,6 @@
     "home": {
       "header": "Anasayfa",
       "status": {
-        "unknown": "Bilinmiyor",
         "notWorking": "Aktif Değil",
         "ok": "Aktif",
         "partially": "Yarı-Aktif"

@@ -5,6 +5,7 @@ import { setNewLanguage, getTranslations } from './language.js'
 export function setError(place, issue) {
   const fullErrorLog = setErrorData(`${place}: ${issue}`)
   document.getElementById('errorh_panel').innerHTML = fullErrorLog
+
   toast(`${place}: ${issue}`)
 }
 
@@ -19,7 +20,25 @@ export function setErrorData(errorLog) {
   const finalLog = getPrevious && getPrevious.length !== 0 ? getPrevious + `\n` + errorLog : errorLog
 
   localStorage.setItem('/system/error', finalLog)
+
   return finalLog
+}
+
+async function getModuleNames(moduleIds) {
+  const fullCommand = moduleIds.map(modId => {
+    let propPath = `/data/adb/modules/${modId}/module.prop`
+
+    return `printf % ; if test -f "${propPath}"; then /system/bin/grep '^name=' "${propPath}" | /system/bin/cut -d '=' -f 2- 2>/dev/null || true; else true; fi ; printf "\\n"`
+  }).join(' ; ')
+
+  const result = await exec(fullCommand)
+  if (result.errno !== 0) {
+    setError('getModuleNames', 'Failed to execute command to retrieve module list names')
+
+    return null
+  }
+
+  return result.stdout.split('\n\n')
 }
 
 (async () => {
@@ -60,11 +79,21 @@ export function setErrorData(errorLog) {
   let zygote64_status = EXPECTED
   let zygote32_status = EXPECTED
 
-  const lscpuCmd = await exec('/system/bin/getprop ro.product.cpu.abilist')
-  if (lscpuCmd.errno !== 0) return setError('WebUI', lscpuCmd.stderr)
+  const androidVersionCmd = await exec('/system/bin/getprop ro.build.version.release')
+  if (androidVersionCmd.errno !== 0) return setError('WebUI', androidVersionCmd.stderr)
 
-  const has64BitSupport = lscpuCmd.stdout.includes('arm64-v8a') || lscpuCmd.stdout.includes('x86_64')
-  const has32BitSupport = lscpuCmd.stdout.includes('armeabi-v7a') || lscpuCmd.stdout.includes('armeabi') || lscpuCmd.stdout.includes('x86')
+  document.getElementById('android_version_div').innerHTML = androidVersionCmd.stdout
+
+  const unameCmd = await exec('/system/bin/uname -r')
+  if (unameCmd.errno !== 0) return setError('WebUI', unameCmd.stderr)
+
+  document.getElementById('kernel_version_div').innerHTML = unameCmd.stdout
+
+  const cpuAbilistCmd = await exec('/system/bin/getprop ro.product.cpu.abilist')
+  if (cpuAbilistCmd.errno !== 0) return setError('WebUI', cpuAbilistCmd.stderr)
+
+  const has64BitSupport = cpuAbilistCmd.stdout.includes('arm64-v8a') || cpuAbilistCmd.stdout.includes('x86_64')
+  const has32BitSupport = cpuAbilistCmd.stdout.includes('armeabi-v7a') || cpuAbilistCmd.stdout.includes('armeabi') || cpuAbilistCmd.stdout.includes('x86')
 
   if (!has64BitSupport) {
     zygote64_div.style.display = 'none'
@@ -190,18 +219,22 @@ export function setErrorData(errorLog) {
 
   const all_modules = []
 
-  modules_64.forEach((module) => all_modules.push({
-    name: module,
-    bitsUsed: [ '64 bit' ]
+  const module_64_names = await getModuleNames(modules_64)
+  modules_64.forEach((module_id, i) => all_modules.push({
+    id: module_id,
+    name: module_64_names[i],
+    bitsUsed: [ '64 bits' ]
   }))
 
-  modules_32.forEach((module) => {
-    const module_index = all_modules.findIndex((module_64_32) => module_64_32.name === module)
+  const module_32_names = await getModuleNames(modules_32)
+  modules_32.forEach((module_id, i) => {
+    const module_index = all_modules.findIndex((module_64_32) => module_64_32.id === module_id)
 
-    if (module_index !== -1) all_modules[module_index].bitsUsed.push('32 bit')
+    if (module_index !== -1) all_modules[module_index].bitsUsed.push('32 bits')
     else all_modules.push({
-      name: module,
-      bitsUsed: [ '32 bit' ]
+      id: module_id,
+      name: module_32_names[i],
+      bitsUsed: [ '32 bits' ]
     })
   })
 

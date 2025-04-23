@@ -21,7 +21,7 @@ export function translateHomePage(old_translations, new_translations) {
       break
     }
     case old_translations.page.home.status.unknown: {
-      rezygisk_state.innerHTML = new_translations.page.home.status.unknown
+      rezygisk_state.innerHTML = new_translations.global.unknown
 
       break
     }
@@ -40,7 +40,7 @@ export function translateHomePage(old_translations, new_translations) {
         break
       }
       case old_translations.page.home.info.zygote.unknown: {
-        zygote32_status_div.innerHTML = new_translations.page.home.info.zygote.unknown
+        zygote32_status_div.innerHTML = new_translations.global.unknown
 
         break
       }
@@ -60,12 +60,20 @@ export function translateHomePage(old_translations, new_translations) {
         break
       }
       case old_translations.page.home.info.zygote.unknown: {
-        zygote64_status_div.innerHTML = new_translations.page.home.info.zygote.unknown
+        zygote64_status_div.innerHTML = new_translations.global.unknown
 
         break
       }
     }
   }
+
+  const android_version_div = document.getElementById('android_version_div')
+  if (android_version_div.innerHTML === old_translations.global.unknown) 
+    android_version_div.innerHTML = new_translations.global.unknown
+
+  const kernel_version_div = document.getElementById('kernel_version_div')
+  if (kernel_version_div.innerHTML === old_translations.global.unknown) 
+    kernel_version_div.innerHTML = new_translations.global.unknown
 
   /* INFO: info card */
   document.getElementById('version_info_title').innerHTML = new_translations.page.home.info.version

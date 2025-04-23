@@ -26,7 +26,6 @@
     "home": {
       "header": "Home",
       "status": {
-        "unknown": "Unknown",
         "notWorking": "Not Working",
         "ok": "Working",
         "partially": "Partially Working"
