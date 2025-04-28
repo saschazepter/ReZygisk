@@ -49,7 +49,7 @@ Hiện tai, chúng tôi chưa tích hợp nền táng dịch nào để dịch m
 Nếu bạn có những câu hỏi nào dành cho ReZygisk hoặc bất kì một dự án nào của PerformanC, hãy tự nhiên tham gia các kênh trò chuyện dưới đây:
 
 - Discord: [PerformanC](https://discord.gg/uPveNfTuCJ)
-- Telegram [ReZygisk]: [@rezygiskchat](https://t.me/rezygiskchat)
+- Telegram [ReZygisk]: [@rezygisk](https://t.me/rezygisk)
 - Telegram [PerformanC]: [@performancorg](https://t.me/performancorg)
 
 ## Đóng góp cho dự án này

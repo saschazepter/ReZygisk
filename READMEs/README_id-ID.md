@@ -67,7 +67,7 @@ Untuk pertanyaan terkait ReZygisk atau proyek PerformanC lainnya, jangan ragu un
 Untuk pertanyaan terkait ReZygisk atau proyek PerformanC lainnya, silakan bergabung ke salah satu saluran berikut:
 
 - Saluran Discord: [PerformanC](https://discord.gg/uPveNfTuCJ)
-- Saluran Telegram ReZygisk: [@rezygiskchat](https://t.me/rezygiskchat)
+- Saluran Telegram ReZygisk: [@rezygisk](https://t.me/rezygisk)
 - Saluran Telegram PerformanC: [@performancorg](https://t.me/performancorg)
 - Grup Signal PerformanC: [@performanc](https://signal.group/#CjQKID3SS8N5y4lXj3VjjGxVJnzNsTIuaYZjj3i8UhipAS0gEhAedxPjT5WjbOs6FUuXptcT)
 

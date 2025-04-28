@@ -62,7 +62,7 @@ Tem duas formas diferentes de contribuir com traduções para o ReZygisk:
 Para quaisquer problemas no ReZygisk ou qualquer projeto da PerformanC, sinta-se livre para entrar em qualquer canal abaixo:
 
 - Server do Discord: [PerformanC](https://discord.gg/uPveNfTuCJ)
-- Canal do Telegram do ReZygisk: [@rezygiskchat](https://t.me/rezygiskchat)
+- Canal do Telegram do ReZygisk: [@rezygisk](https://t.me/rezygisk)
 - Canal do Telegram da PerformanC: [@performancorg](https://t.me/performancorg)
 - Grupo do Signal da PerformanC: [@performanc](https://signal.group/#CjQKID3SS8N5y4lXj3VjjGxVJnzNsTIuaYZjj3i8UhipAS0gEhAedxPjT5WjbOs6FUuXptcT)
 
