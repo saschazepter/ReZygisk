@@ -2,14 +2,9 @@
 
 [English](../README.md)
 
-ReZygisk làm một nhánh phát triển lấy từ ZygiskNext, một triển khai độc lập của Zygisk, cung cấp và hỗ trợ Zygisk API cho KernelSU, Magisk (bên cạnh tích hợp) và APatch (Đang trong quá trình phát triển).
+ReZygisk làm một nhánh phát triển lấy từ ZygiskNext, một triển khai độc lập của Zygisk, cung cấp và hỗ trợ Zygisk API cho KernelSU, APatch và Magisk (chính thức và Kitsune).
 
-Mục tiêu của ReZygisk là mô-đun hoá và viết lại toàn bộ codebase từ C++/Rust sang C, cho phép triển khai API Zygisk hiệu quả hơn và nhanh hơn với giấy phép dễ dàng tái sử dụng hơn.
-
-> [!NOTE]
-> Mô-đun này đang trong quá trình phát triển; chỉ nên sử dụng file .zip từ các bản phát hành.
->
-> Mạc dù bạn có thể cài đặt mô-đun được lấy từ trang [Actions](https://github.com/PerformanC/ReZygisk/actions), nhưng sẽ chỉ phụ thuộc vào bạn có chấp nhận rủi ro hay không vì các mô-đun này có thể gây lỗi cho hệ điều hành. Ví dụ: Bootloop (Lỗi liên tục khởi động lại máy)
+Mục tiêu của ReZygisk là mô-đun hoá và viết lại toàn bộ codebase sang C, cho phép triển khai API Zygisk hiệu quả hơn và nhanh hơn với giấy phép dễ dàng tái sử dụng hơn.
 
 ## Tại sao nhánh phát triển này lại xuất hiện?
 
@@ -23,9 +18,9 @@ Các nhà phát triển Zygisk Next đều là những người nổi tiếng v�
 
 ## Các công cụ/thư viện được sử dụng
 
-| Công cụ         | Mô tả                                     |
-|-----------------|-------------------------------------------|
-| `Android NDK`   | Bộ công cụ phát triển cốt lõi cho Android |
+| Công cụ / Thư Viện        | Mô tả                                     |
+|---------------------------|-------------------------------------------|
+| `Android NDK`             | Bộ công cụ phát triển cốt lõi cho Android |
 
 ### Các công cụ/thư viện của C++ được sử dụng
 
@@ -33,13 +28,22 @@ Các nhà phát triển Zygisk Next đều là những người nổi tiếng v�
 |------------|----------------------------------------------|
 | `lsplt`    | Công cụ **móc** vào PLT đơn giản cho Android |
 
-## Các sử dụng
-
-Chúng tôi đang trong quá trình phát triển (Sắp ra mắt)
-
 ## Cài Đặt
 
-Hiện chưa có bản ra mắt ổn định (Sắp ra mắt)
+### 1. Sử dụng đúng tệp zip
+
+Chọn đúng tệp bản dựng / zip là một điều tất yếu, bởi nó sẽ xác định khả năng ẩn của ReZygisk. Về cơ bản đây không phải là một việc khó:
+
+- `release` bản này sẽ được chọn trong hầy hết các trường hợp sử dụng, bản này loại bỏ nhật ký phát triển cấp độ ứng dụng và cung cấp các tệp nhị phân được tối ưu hóa hơn.
+- `debug`,  bản này tuy nhiên không được tối ưu và đi kèm với nó là ghi lại nhật ký phát triển khá nhiều. Vì lý do này, **chỉ nên sử dụng khi cần gỡ lỗi** và **khi cần ghi lại nhật lý để tạo báo về lỗi hoặc gì đó**. 
+
+As for branches, you should always use the `main` branch, unless told otherwise by the developers, or if you want to test upcoming features and are aware of the risks involved.
+
+### 2. Flash the zip
+
+After choosing the right build, you should flash it using your current root manager, like Magisk or KernelSU. You can do this by going to the `Modules` section of your root manager and selecting the zip you downloaded.
+
+After flashing, check the installation logs to ensure there are no errors, and if everything is fine, you can reboot your device.
 
 ## Dịch WebUI cho mô-đun
 
