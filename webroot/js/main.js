@@ -24,9 +24,9 @@ export function setErrorData(errorLog) {
   return finalLog
 }
 
-async function getModuleNames(moduleIds) {
-  const fullCommand = moduleIds.map(modId => {
-    let propPath = `/data/adb/modules/${modId}/module.prop`
+async function getModuleNames(modules) {
+  const fullCommand = modules.map((mod) => {
+    let propPath = `/data/adb/modules/${mod.id}/module.prop`
 
     return `printf % ; if test -f "${propPath}"; then /system/bin/grep '^name=' "${propPath}" | /system/bin/cut -d '=' -f 2- 2>/dev/null || true; else true; fi ; printf "\\n"`
   }).join(' ; ')
@@ -42,16 +42,13 @@ async function getModuleNames(moduleIds) {
 }
 
 (async () => {
-  // Test ksu module availability
+  /* INFO: Test ksu module availability */
   exec('echo "Hello world!"')
     .then(() => console.log('[kernelsu.js] Package is ready!'))
     .catch(err => {
       console.log('[kernelsu.js] Package is not ready! Below is error:')
       console.error(err)
     })
-
-  const EXPECTED = 1
-  const UNEXPECTED_FAIL = 2
 
   fullScreen(true)
 
@@ -70,22 +67,20 @@ async function getModuleNames(moduleIds) {
   const rezygisk_state = document.getElementById('rezygisk_state')
   const rezygisk_icon_state = document.getElementById('rezygisk_icon_state')
 
-  const code_version = document.getElementById('version_code')
+  const version = document.getElementById('version')
   const root_impl = document.getElementById('root_impl')
-
-  const zygote64_div = document.getElementById('zygote64')
-  const zygote32_div = document.getElementById('zygote32')
 
   const monitor_status = document.getElementById('monitor_status')
 
-  const zygote32_status_div = document.getElementById('zygote32_status')
-  const zygote64_status_div = document.getElementById('zygote64_status')
+  const zygote_divs = [
+    document.getElementById('zygote64'),
+    document.getElementById('zygote32')
+  ]
 
-  const modules_32 = []
-  const modules_64 = []
-
-  let zygote64_status = EXPECTED
-  let zygote32_status = EXPECTED
+  const zygote_status_divs = [
+    document.getElementById('zygote64_status'),
+    document.getElementById('zygote32_status')
+  ]
 
   const androidVersionCmd = await exec('/system/bin/getprop ro.build.version.release')
   if (androidVersionCmd.errno !== 0) return setError('WebUI', androidVersionCmd.stderr)
@@ -99,179 +94,160 @@ async function getModuleNames(moduleIds) {
   document.getElementById('kernel_version_div').innerHTML = unameCmd.stdout
   console.log('[rezygisk.js] Kernel version: ', unameCmd.stdout)
 
-  const cpuAbilistCmd = await exec('/system/bin/getprop ro.product.cpu.abilist')
-  if (cpuAbilistCmd.errno !== 0) return setError('WebUI', cpuAbilistCmd.stderr)
-  console.log(`[rezygisk.js] CPU ab list:\n${cpuAbilistCmd.stdout}`)
+  const catCmd = await exec('/system/bin/cat /data/adb/rezygisk/module.prop')
+  console.log(`[rezygisk.js] ReZygisk module infomation:\n${catCmd.stdout}`)
 
-  const has64BitSupport = cpuAbilistCmd.stdout.includes('arm64-v8a') || cpuAbilistCmd.stdout.includes('x86_64')
-  const has32BitSupport = cpuAbilistCmd.stdout.includes('armeabi-v7a') || cpuAbilistCmd.stdout.includes('armeabi') || cpuAbilistCmd.stdout.includes('x86')
+  let expectedWorking = 0
+  let actuallyWorking = 0
 
-  if (!has64BitSupport) {
-    zygote64_div.style.display = 'none'
+  const ReZygiskInfo = {
+    rootImpl: null,
+    monitor: null,
+    zygotes: [],
+    daemons: []
   }
-
-  if (!has32BitSupport) {
-    zygote32_div.style.display = 'none'
-  }
-
-  const catCmd = await exec('/system/bin/cat /data/adb/rezygisk/status')
-  console.log(`[rezygisk.js] Binary infomation:\n${catCmd.stdout}`)
 
   if (catCmd.errno === 0) {
-    const [ Version, Tracing, Daemon64, Zygote64 ] = catCmd.stdout.split('\n')
-    let hasOffset = false
-    /* TODO: Show if daemon is running */
+    /* INFO: Just ensure that they won't appear unless there's info */
+    zygote_divs.forEach((zygote_div) => {
+      zygote_div.style.display = 'none'
+    })
 
-    code_version.innerHTML = Version.split(': ')[1]
+    version.innerHTML = catCmd.stdout.split('\n').find((line) => line.startsWith('version=')).substring('version='.length).trim()
 
-    const tracingState = Tracing.split(': ')[1].split(' ')[0]
-    switch (tracingState) {
-      case '1': monitor_status.innerHTML = translations.page.actions.status.tracing; break;
-      case '2': monitor_status.innerHTML = translations.page.actions.status.stopping; break;
-      case '3': monitor_status.innerHTML = translations.page.actions.status.stopped; break;
-      case '4': monitor_status.innerHTML = translations.page.actions.status.exiting; break;
+    let moduleInfo = catCmd.stdout.split('\n').find((line) => line.startsWith('description=')).substring('description='.length).split('[')[1].split(']')[0]
+
+    const daemonModules = []
+    moduleInfo.match(/\(([^)]+)\)/g).forEach((area) => {
+      moduleInfo = moduleInfo.replace(area, ',')
+
+      const info = area.substring(1, area.length - 1).split(', ')
+
+      const rootImpl = info[0].substring('Root: '.length)
+      const modules = info[1].substring('Modules: '.length).split(', ')
+
+      ReZygiskInfo.rootImpl = rootImpl
+      if (modules[0] !== 'None') daemonModules.push(modules)
+    })
+
+    const infoArea = moduleInfo.split(', ')
+    infoArea.forEach((info) => {
+      if (info.startsWith('monitor:')) {
+        ReZygiskInfo.monitor = info.substring('monitor: X '.length).trim()
+      }
+
+      if (info.startsWith('zygote')) {
+        ReZygiskInfo.zygotes.push({
+          bits: info.substring('zygote'.length, 'zygote'.length + 'XX'.length),
+          state: info.substring('zygoteXX: X '.length).trim()
+        })
+      }
+
+      if (info.startsWith('daemon')) {
+        ReZygiskInfo.daemons.push({
+          bits: info.substring('daemon'.length, 'daemon'.length + 'XX'.length),
+          state: info.substring('daemonXX: X '.length).trim(),
+          modules: daemonModules[ReZygiskInfo.daemons.length] || []
+        })
+      }
+    })
+
+    switch (ReZygiskInfo.monitor) {
+      case 'tracing': monitor_status.innerHTML = translations.page.actions.status.tracing; break;
+      case 'stopping': monitor_status.innerHTML = translations.page.actions.status.stopping; break;
+      case 'stopped': monitor_status.innerHTML = translations.page.actions.status.stopped; break;
+      case 'exiting': monitor_status.innerHTML = translations.page.actions.status.exiting; break;
       default: monitor_status.innerHTML = translations.page.actions.status.unknown;
     }
 
-    if (has64BitSupport && Daemon64 && Daemon64.startsWith('Daemon64:')) {
-      hasOffset = true
+    expectedWorking = ReZygiskInfo.zygotes.length
 
-      let daemon64_status = Daemon64.split(': ').slice(1).join(': ')
-      let daemon64_info = null
-      if (daemon64_status.split(' ')[1]) {
-        daemon64_info = daemon64_status.split(' ').slice(1).join(' ')
-        daemon64_status = daemon64_status.split(' ')[0]
+    for (let i = 0; i < ReZygiskInfo.zygotes.length; i++) {
+      const zygote = ReZygiskInfo.zygotes[i]
+      /* INFO: Not used ATM */
+      /* const daemon = ReZygiskInfo.daemons[i] */
 
-        root_impl.innerHTML = daemon64_info.split('Root: ')[1].split(',')[0]
-        
-        const modules = daemon64_info.split('Modules: ')[1].split(')')[0].split(', ')
-        if (modules[0] !== 'None') modules_64.push(...modules)
-      }
+      const zygoteDiv = zygote_divs[zygote.bits === '64' ? 0 : 1]
+      const zygoteStatusDiv = zygote_status_divs[zygote.bits === '64' ? 0 : 1]
 
-      const zygote64_injection_status = Zygote64.split(': ')[1]
+      zygoteDiv.style.display = 'block'
 
-      /* TODO: add handling for unknown status */
-      if (zygote64_injection_status === 'injected') {
-        zygote64_status_div.innerHTML = translations.page.home.info.zygote.injected
-      } else if (zygote64_injection_status === 'not injected') {
-        zygote64_status_div.innerHTML = translations.page.home.info.zygote.notInjected
+      switch (zygote.state) {
+        case 'injected': {
+          zygoteStatusDiv.innerHTML = translations.page.home.info.zygote.injected;
 
-        zygote64_status = UNEXPECTED_FAIL
-      } else {
-        zygote64_status_div.innerHTML = translations.page.home.info.zygote.unknown
+          actuallyWorking++
 
-        zygote64_status = UNEXPECTED_FAIL
-      }
-    } else if (has64BitSupport && (!Daemon64 || !Daemon64.startsWith('Daemon64:'))) {
-      zygote64_div.style.display = 'none'
-
-      zygote64_status = UNEXPECTED_FAIL
-    }
-
-    if (has32BitSupport) {
-      let Daemon32 = null
-      let Zygote32 = null
-
-      if (hasOffset) {
-        Daemon32 = catCmd.stdout.split('\n')[4]
-        Zygote32 = catCmd.stdout.split('\n')[5]
-      } else {
-        Daemon32 = catCmd.stdout.split('\n')[2]
-        Zygote32 = catCmd.stdout.split('\n')[3]
-      }
-
-      if (Daemon32 && Daemon32.startsWith('Daemon32:')) {
-        /* INFO: Daemon32 is supported */
-        let daemon32_status = Daemon32.split(': ').slice(1).join(': ')
-        let daemon32_info = null
-        if (daemon32_status.split(' ')[1]) {
-          daemon32_info = daemon32_status.split(' ').slice(1).join(' ')
-          daemon32_status = daemon32_status.split(' ')[0]
-
-          root_impl.innerHTML = daemon32_info.split('Root: ')[1].split(',')[0]
-
-          const modules = daemon32_info.split('Modules: ')[1].split(')')[0].split(', ')
-          if (modules[0] !== 'None') modules_32.push(...modules)
+          break;
         }
-
-        const zygote32_injection_status = Zygote32.split(': ')[1]
-
-        if (zygote32_injection_status === 'injected') {
-          zygote32_status_div.innerHTML = translations.page.home.info.zygote.injected
-        } else if (zygote32_injection_status === 'not injected') {
-          zygote32_status_div.innerHTML = translations.page.home.info.zygote.notInjected
-
-          zygote32_status = UNEXPECTED_FAIL
-        } else {
-          zygote32_status_div.innerHTML = translations.page.home.info.zygote.unknown
-
-          zygote32_status = UNEXPECTED_FAIL
-        }
-      } else {
-        zygote32_div.style.display = 'none'
-
-        zygote32_status = UNEXPECTED_FAIL
+        case 'not injected': zygoteStatusDiv.innerHTML = translations.page.home.info.zygote.notInjected; break;
+        default: zygoteStatusDiv.innerHTML = translations.page.home.info.zygote.unknown;
       }
     }
   }
 
-  if (zygote32_status === EXPECTED && zygote64_status === EXPECTED) {
+  if (expectedWorking === 0 || actuallyWorking === 0) {
+    rezygisk_state.innerHTML = translations.page.home.status.notWorking
+  } else if (expectedWorking === actuallyWorking) {
     rezygisk_state.innerHTML = translations.page.home.status.ok
 
     rootCss.style.setProperty('--bright', '#3a4857')
     rezygisk_icon_state.innerHTML = '<img class="brightc" src="assets/tick.svg">'
-  } else if (zygote64_status === EXPECTED ^ zygote32_status.innerHTML === EXPECTED) {
+  } else {
     rezygisk_state.innerHTML = translations.page.home.status.partially
 
     rootCss.style.setProperty('--bright', '#766000')
     rezygisk_icon_state.innerHTML = '<img class="brightc" src="assets/warn.svg">'
-  } else {
-    rezygisk_state.innerHTML = translations.page.home.status.notWorking
   }
 
+  if (ReZygiskInfo.rootImpl)
+    root_impl.innerHTML = ReZygiskInfo.rootImpl
+
   const all_modules = []
+  ReZygiskInfo.daemons.forEach((daemon) => {
+    daemon.modules.forEach((module_id) => {
+      const module = all_modules.find((mod) => mod.id === module_id)
 
-  const module_64_names = await getModuleNames(modules_64)
-  modules_64.forEach((module_id, i) => all_modules.push({
-    id: module_id,
-    name: module_64_names[i],
-    bitsUsed: [ '64 bits' ]
-  }))
-
-  const module_32_names = await getModuleNames(modules_32)
-  modules_32.forEach((module_id, i) => {
-    const module_index = all_modules.findIndex((module_64_32) => module_64_32.id === module_id)
-
-    if (module_index !== -1) all_modules[module_index].bitsUsed.push('32 bits')
-    else all_modules.push({
-      id: module_id,
-      name: module_32_names[i],
-      bitsUsed: [ '32 bits' ]
+      if (module) {
+        module.bitsUsed.push(daemon.bits)
+      } else {
+        all_modules.push({
+          id: module_id,
+          name: null,
+          bitsUsed: [ daemon.bits ]
+        })
+      }
     })
   })
 
-  console.log(`[rezygisk.js] Module list:`)
-  console.log(all_modules)
-
-  if (all_modules.length !== 0)
+  if (all_modules.length !== 0) {
     document.getElementById('modules_list_not_avaliable').style.display = 'none'
 
-  const modules_list = document.getElementById('modules_list')
+    const module_names = await getModuleNames(all_modules)
+    module_names.forEach((module_name, i) => all_modules[i].name = module_name)
+
+    console.log(`[rezygisk.js] Module list:`)
+    console.log(all_modules)
+
+    const modules_list = document.getElementById('modules_list')
+
+    all_modules.forEach((module) => {
+      modules_list.innerHTML += 
+        `<div class="dim card" style="padding: 25px 15px; cursor: pointer;">
+          <div class="dimc" style="font-size: 1.1em;">${module.name}</div>
+          <div class="dimc desc" style="font-size: 0.9em; margin-top: 3px; white-space: nowrap; align-items: center; display: flex;">
+            <div class="dimc arch_desc">${translations.page.modules.arch}</div>
+            <div class="dimc" style="margin-left: 5px;">${module.bitsUsed.join(' / ')}</div>
+          </div>
+        </div>`
+    })
+  
+  }
 
   /* INFO: This hides the throbber screen */
   loading_screen.style.display = 'none'
   bottom_nav.style.display = 'flex'
 
-  all_modules.forEach((module) => {
-    modules_list.innerHTML += 
-      `<div class="dim card" style="padding: 25px 15px; cursor: pointer;">
-        <div class="dimc" style="font-size: 1.1em;">${module.name}</div>
-        <div class="dimc desc" style="font-size: 0.9em; margin-top: 3px; white-space: nowrap; align-items: center; display: flex;">
-          <div class="dimc arch_desc">${translations.page.modules.arch}</div>
-          <div class="dimc" style="margin-left: 5px;">${module.bitsUsed.join(' / ')}</div>
-        </div>
-      </div>`
-  })
 
   const start_time = Number(localStorage.getItem('/system/boot-time'))
   console.log('[rezygisk.js] boot time: ', Date.now() - start_time, 'ms')
