@@ -42,6 +42,15 @@ async function getModuleNames(moduleIds) {
 }
 
 (async () => {
+  console.time('rezygisk.js boot time')
+  // Test ksu module availability
+  exec('echo "Hello world!"')
+    .then(() => console.log('[kernelsu.js]: Package is ready!'))
+    .catch(err => {
+      console.log('[kernelsu.js]: Package is not ready! Below is error:')
+      console.error(err)
+    })
+
   const EXPECTED = 1
   const UNEXPECTED_FAIL = 2
 
@@ -83,14 +92,17 @@ async function getModuleNames(moduleIds) {
   if (androidVersionCmd.errno !== 0) return setError('WebUI', androidVersionCmd.stderr)
 
   document.getElementById('android_version_div').innerHTML = androidVersionCmd.stdout
+  console.log('[rezygisk.js]: Android version: ', androidVersionCmd.stdout)
 
   const unameCmd = await exec('/system/bin/uname -r')
   if (unameCmd.errno !== 0) return setError('WebUI', unameCmd.stderr)
 
   document.getElementById('kernel_version_div').innerHTML = unameCmd.stdout
+  console.log('[rezygisk.js]: Kernel version: ', unameCmd.stdout)
 
   const cpuAbilistCmd = await exec('/system/bin/getprop ro.product.cpu.abilist')
   if (cpuAbilistCmd.errno !== 0) return setError('WebUI', cpuAbilistCmd.stderr)
+  console.log(`[rezygisk.js]: CPU ab list:\n${cpuAbilistCmd.stdout}`)
 
   const has64BitSupport = cpuAbilistCmd.stdout.includes('arm64-v8a') || cpuAbilistCmd.stdout.includes('x86_64')
   const has32BitSupport = cpuAbilistCmd.stdout.includes('armeabi-v7a') || cpuAbilistCmd.stdout.includes('armeabi') || cpuAbilistCmd.stdout.includes('x86')
@@ -104,6 +116,7 @@ async function getModuleNames(moduleIds) {
   }
 
   const catCmd = await exec('/system/bin/cat /data/adb/rezygisk/status')
+  console.log(`[rezygisk.js]: Binary infomation:\n${catCmd.stdout}`)
 
   if (catCmd.errno === 0) {
     const [ Version, Tracing, Daemon64, Zygote64 ] = catCmd.stdout.split('\n')
@@ -238,6 +251,9 @@ async function getModuleNames(moduleIds) {
     })
   })
 
+  console.log(`[rezygisk.js]: Module list:`)
+  console.log(all_modules)
+
   if (all_modules.length !== 0)
     document.getElementById('modules_list_not_avaliable').style.display = 'none'
 
@@ -257,4 +273,6 @@ async function getModuleNames(moduleIds) {
         </div>
       </div>`
   })
+
+  console.timeEnd('[rezygisk.js]: boot time')
 })().catch((err) => setError('WebUI', err.stack ? err.stack : err.message))
