@@ -79,12 +79,12 @@ export function translateHomePage(old_translations, new_translations) {
   document.getElementById('version_info_title').innerHTML = new_translations.page.home.info.version
   document.getElementById('root_info_title').innerHTML = new_translations.page.home.info.root
 
-  const version_code = document.getElementById('version_code')
-  const root_impl = document.getElementById('root_impl')
+  // const version_code = document.getElementById('version_code')
+  // const root_impl = document.getElementById('root_impl')
 
-  if (version_code.innerHTML.replace(/(\r\n|\n|\r)/gm, '').trim() === old_translations.global.unknown)
-    version_code.innerHTML = new_translations.global.unknown
+  // if (version_code.innerHTML.replace(/(\r\n|\n|\r)/gm, '').trim() === old_translations.global.unknown)
+  //   version_code.innerHTML = new_translations.global.unknown
 
-  if (root_impl.innerHTML.replace(/(\r\n|\n|\r)/gm, '').trim() === old_translations.global.unknown)
-    root_impl.innerHTML = new_translations.global.unknown
+  // if (root_impl.innerHTML.replace(/(\r\n|\n|\r)/gm, '').trim() === old_translations.global.unknown)
+  //   root_impl.innerHTML = new_translations.global.unknown
 }
