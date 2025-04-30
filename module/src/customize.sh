@@ -151,7 +151,7 @@ extract "$ZIPFILE" 'webroot/css/error.css' "$MODPATH/webroot/css" true
 extract "$ZIPFILE" 'webroot/fonts/poppins.ttf' "$MODPATH/webroot/fonts" true
 extract "$ZIPFILE" 'webroot/fonts/header.css' "$MODPATH/webroot/fonts" true
 
-for lang in en_US ja_JP pt_BR ro_RO ru_RU vi_VN zh_CN zh_TW; do
+for lang in ar_EG en_US ja_JP pt_BR ro_RO ru_RU vi_VN zh_CN zh_TW; do
   extract "$ZIPFILE" "webroot/lang/${lang}.json" "$MODPATH/webroot/lang" true
 done
 
