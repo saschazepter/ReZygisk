@@ -124,7 +124,9 @@ async function getModuleNames(modules) {
       const info = area.substring(1, area.length - 1).split(', ')
 
       const rootImpl = info[0].substring('Root: '.length)
-      const modules = info[1].substring('Modules: '.length).split(', ')
+
+      info[1] = info[1].substring('Modules: '.length)
+      const modules = info.slice(1, info.length)
 
       ReZygiskInfo.rootImpl = rootImpl
       if (modules[0] !== 'None') daemonModules.push(modules)
