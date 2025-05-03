@@ -15,11 +15,11 @@
     },
     "errorh": {
       "buttons": {
-        "copy": "COPY",
-        "clear": "CLEAR ALL LOGS"
+        "copy": "Kopieren",
+        "clear": "ALLE LOGS LÖSCHEN"
       },
-      "header": "Error History",
-      "placeholder": "No error log recorded here!"
+      "header": "Fehler Verlauf",
+      "placeholder": "Es wurde kein Fehlerprotokoll aufgezeichnet!"
     }
   },
   "page": {
@@ -44,22 +44,6 @@
       "header": "Module",
       "notAvaliable": "Kein Modul nutzt Zygisk.",
       "arch": "Architektur: "
-    },
-    "actions": {
-      "header": "Aktion",
-      "monitorButton": {
-        "start": "Start",
-        "stop": "Stopp",
-        "pause": "Pause"
-      },
-      "monitor": "Monitor",
-      "status": {
-        "tracing": "Tracing",
-        "stopping": "Stopping",
-        "stopped": "Stopped",
-        "exiting": "Exiting",
-        "unknown": "Unknown"
-      }
     },
     "settings": {
       "header": "Einstellungen",
@@ -87,6 +71,22 @@
       "license": {
         "module": "Modul Lizenz",
         "web": "WebUI Lizenz"
+      }
+    },
+    "actions": {
+      "header": "Aktionen",
+      "monitorButton": {
+        "pause": "Pause",
+        "stop": "Stopp",
+        "start": "Start"
+      },
+      "monitor": "Überwachen",
+      "status": {
+        "tracing": "Nachverfolgung",
+        "stopping": "Beenden",
+        "stopped": "Beendet",
+        "exiting": "Wird Beendet",
+        "unknown": "Unbekannt"
       }
     }
   }

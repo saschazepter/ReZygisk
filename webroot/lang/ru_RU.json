@@ -15,11 +15,11 @@
     },
     "errorh": {
       "buttons": {
-        "copy": "COPY",
-        "clear": "CLEAR ALL LOGS"
+        "copy": "Копировать",
+        "clear": "Очистить все логи"
       },
-      "header": "Error History",
-      "placeholder": "No error log recorded here!"
+      "header": "Журнал ошибок",
+      "placeholder": "Журнал ошибок здесь не ведется!"
     }
   },
   "page": {
@@ -44,22 +44,6 @@
       "header": "Модули",
       "notAvaliable": "Здесь нет модулей, использующих Zygisk.",
       "arch": "Архитектура: "
-    },
-    "actions": {
-      "header": "Действие",
-      "monitorButton": {
-        "start": "Начать",
-        "stop": "Стоп",
-        "pause": "Пауза"
-      },
-      "monitor": "Мониторинг",
-      "status": {
-        "tracing": "Tracing",
-        "stopping": "Stopping",
-        "stopped": "Stopped",
-        "exiting": "Exiting",
-        "unknown": "Unknown"
-      }
     },
     "settings": {
       "header": "Настройки",
@@ -87,6 +71,22 @@
       "license": {
         "module": "Лицензия модуля",
         "web": "Лицензия WebUI"
+      }
+    },
+    "actions": {
+      "header": "Действия",
+      "monitorButton": {
+        "pause": "Пауза",
+        "stop": "Стоп",
+        "start": "Начать"
+      },
+      "monitor": "Обзор",
+      "status": {
+        "tracing": "Состояние",
+        "stopping": "Остановка",
+        "stopped": "Остановлено",
+        "exiting": "Выход",
+        "unknown": "Неизвестно"
       }
     }
   }
