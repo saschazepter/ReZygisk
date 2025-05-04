@@ -2,6 +2,7 @@
 - **ar_EG** by [@ZG089](https://github.com/ZG089)
 - **de_DE** by [@Blazzycrafer](https://github.com/Blazzycrafter)
 - **en_US** by [@PerformanC (The PerformanC Organization)](https://github.com/PerformanC)
+- **es_AR** by [@Flopster101](https://github.com/Flopster101)
 - **fr_FR** by [@GhostFRR](https://github.com/GhostFRR)
 - **ja_JP** by [@Fyphen1223](https://github.com/Fyphen1223)
 - **id_ID** by [@bpanca05](https://github.com/bpanca05) & [@LuckyKiddos](https://github.com/GuitarHeroStyles)
