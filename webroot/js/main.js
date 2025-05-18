@@ -122,6 +122,7 @@ async function getModuleNames(modules) {
       moduleInfo = moduleInfo.replace(area, ',')
 
       const info = area.substring(1, area.length - 1).split(', ')
+      if (info.length === 1) return; /* INFO: undefined as object */
 
       const rootImpl = info[0].substring('Root: '.length)
 
