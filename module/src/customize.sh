@@ -110,7 +110,7 @@ mkdir "$MODPATH/bin"
 mkdir "$MODPATH/webroot"
 
 ui_print "- Extracting webroot"
-unzip -o "$ZIPFILE" "webroot/*" -d "$MODPATH"
+unzip -o "$ZIPFILE" "webroot/*" -x "*.sha256" -d "$MODPATH"
 
 CPU_ABIS=$(getprop ro.product.cpu.abilist)
 
