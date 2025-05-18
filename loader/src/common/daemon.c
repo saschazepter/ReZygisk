@@ -64,7 +64,7 @@ bool rezygiskd_ping() {
   return true;
 }
 
-uint32_t rezygiskd_get_process_flags(uid_t uid) {
+uint32_t rezygiskd_get_process_flags(uid_t uid, const char *const process) {
   int fd = rezygiskd_connect(1);
   if (fd == -1) {
     PLOGE("connection to ReZygiskd");
@@ -74,6 +74,7 @@ uint32_t rezygiskd_get_process_flags(uid_t uid) {
 
   write_uint8_t(fd, (uint8_t)GetProcessFlags);
   write_uint32_t(fd, (uint32_t)uid);
+  write_string(fd, process);
 
   uint32_t res = 0;
   read_uint32_t(fd, &res);
@@ -148,6 +149,8 @@ void rezygiskd_get_info(struct rezygisk_info *info) {
 
     char module_path[PATH_MAX];
     snprintf(module_path, sizeof(module_path), "/data/adb/modules/%s/module.prop", module_name);
+
+    free(module_name);
 
     FILE *module_prop = fopen(module_path, "r");
     if (!module_prop) {
@@ -336,6 +339,14 @@ bool rezygiskd_update_mns(enum mount_namespace_state nms_state, char *buf, size_
   uint32_t target_fd = 0;
   if (read_uint32_t(fd, &target_fd) < 0) {
     PLOGE("Failed to read target fd");
+
+    close(fd);
+
+    return false;
+  }
+
+  if (target_fd == 0) {
+    LOGE("Failed to get target fd");
 
     close(fd);
 

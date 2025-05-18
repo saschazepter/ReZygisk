@@ -49,7 +49,7 @@ enum Architecture {
 
 static enum Architecture get_arch(void) {
   char system_arch[32];
-  get_property("ro.product.cpu.abi", system_arch);
+  get_property("ro.product.cpu.abilist", system_arch);
 
   if (strstr(system_arch, "arm") != NULL) return lp_select(ARM32, ARM64);
   if (strstr(system_arch, "x86") != NULL) return lp_select(X86, X86_64);
@@ -255,7 +255,6 @@ static int spawn_companion(char *restrict argv[], char *restrict name, int lib_f
 struct __attribute__((__packed__)) MsgHead {
   unsigned int cmd;
   int length;
-  char data[0];
 };
 
 /* WARNING: Dynamic memory based */
@@ -268,29 +267,20 @@ void zygiskd_start(char *restrict argv[]) {
   struct root_impl impl;
   get_impl(&impl);
   if (impl.impl == None || impl.impl == Multiple) {
-    struct MsgHead *msg = NULL;
-  
-    if (impl.impl == None) {
-      msg = malloc(sizeof(struct MsgHead) + strlen("Unsupported environment: Unknown root implementation") + 1);
-    } else {
-      msg = malloc(sizeof(struct MsgHead) + strlen("Unsupported environment: Multiple root implementations found") + 1);
-    }
-    if (msg == NULL) {
-      LOGE("Failed allocating memory for message.\n");
+    char *msg_data = NULL;
 
-      return;
-    }
+    if (impl.impl == None) msg_data = "Unsupported environment: Unknown root implementation";
+    else msg_data = "Unsupported environment: Multiple root implementations found";
 
-    msg->cmd = DAEMON_SET_ERROR_INFO;
-    if (impl.impl == None) {
-      msg->length = sprintf(msg->data, "Unsupported environment: Unknown root implementation");
-    } else {
-      msg->length = sprintf(msg->data, "Unsupported environment: Multiple root implementations found");
-    }
+    struct MsgHead msg = {
+      .cmd = DAEMON_SET_ERROR_INFO,
+      .length = (int)strlen(msg_data) + 1
+    };
 
-    unix_datagram_sendto(CONTROLLER_SOCKET, (void *)msg, (size_t)((int)sizeof(struct MsgHead) + msg->length));
+    unix_datagram_sendto(CONTROLLER_SOCKET, &msg, sizeof(struct MsgHead));
+    unix_datagram_sendto(CONTROLLER_SOCKET, msg_data, (size_t)msg.length);
 
-    free(msg);
+    free(msg_data);
   } else {
     enum Architecture arch = get_arch();
     load_modules(arch, &context);
@@ -337,13 +327,24 @@ void zygiskd_start(char *restrict argv[]) {
 
     size_t msg_length = strlen("Root: , Modules: ") + strlen(impl_name) + module_list_len + 1;
 
-    struct MsgHead *msg = malloc(sizeof(struct MsgHead) + msg_length);
-    msg->length = snprintf(msg->data, msg_length, "Root: %s, Modules: %s", impl_name, module_list) + 1;
-    msg->cmd = DAEMON_SET_INFO;
+    struct MsgHead msg = {
+      .cmd = DAEMON_SET_INFO,
+      .length = (int)msg_length
+    };
 
-    unix_datagram_sendto(CONTROLLER_SOCKET, (void *)msg, (size_t)((int)sizeof(struct MsgHead) + msg->length));
+    char *msg_data = malloc(msg_length);
+    if (msg_data == NULL) {
+      LOGE("Failed allocating memory for message data.\n");
 
-    free(msg);
+      return;
+    }
+
+    snprintf(msg_data, msg_length, "Root: %s, Modules: %s", impl_name, module_list);
+
+    unix_datagram_sendto(CONTROLLER_SOCKET, &msg, sizeof(struct MsgHead));
+    unix_datagram_sendto(CONTROLLER_SOCKET, msg_data, msg_length);
+
+    free(msg_data);
     free(module_list);
   }
 
@@ -379,8 +380,12 @@ void zygiskd_start(char *restrict argv[]) {
 
     switch (action) {
       case PingHeartbeat: {
-        enum DaemonSocketAction msgr = ZYGOTE_INJECTED;
-        unix_datagram_sendto(CONTROLLER_SOCKET, &msgr, sizeof(enum DaemonSocketAction));
+        struct MsgHead msg = {
+          .cmd = ZYGOTE_INJECTED,
+          .length = 0
+        };
+
+        unix_datagram_sendto(CONTROLLER_SOCKET, &msg, sizeof(struct MsgHead));
 
         break;
       }
@@ -395,8 +400,12 @@ void zygiskd_start(char *restrict argv[]) {
         break;
       }
       case SystemServerStarted: {
-        enum DaemonSocketAction msgr = SYSTEM_SERVER_STARTED;
-        unix_datagram_sendto(CONTROLLER_SOCKET, &msgr, sizeof(enum DaemonSocketAction));
+        struct MsgHead msg = {
+          .cmd = SYSTEM_SERVER_STARTED,
+          .length = 0
+        };
+
+        unix_datagram_sendto(CONTROLLER_SOCKET, &msg, sizeof(struct MsgHead));
 
         if (impl.impl == None || impl.impl == Multiple) {
           LOGI("Unsupported environment detected. Exiting.\n");
@@ -415,6 +424,15 @@ void zygiskd_start(char *restrict argv[]) {
         ssize_t ret = read_uint32_t(client_fd, &uid);
         ASSURE_SIZE_READ_BREAK("GetProcessFlags", "uid", ret, sizeof(uid));
 
+        /* INFO: Only used for Magisk, as it saves process names and not UIDs. */
+        char process[PROCESS_NAME_MAX_LEN];
+        ret = read_string(client_fd, process, sizeof(process));
+        if (ret == -1) {
+          LOGE("Failed reading process name.\n");
+
+          break;
+        }
+
         uint32_t flags = 0;
         if (first_process) {
           flags |= PROCESS_IS_FIRST_STARTED;
@@ -427,7 +445,7 @@ void zygiskd_start(char *restrict argv[]) {
             if (uid_granted_root(uid)) {
               flags |= PROCESS_GRANTED_ROOT;
             }
-            if (uid_should_umount(uid)) {
+            if (uid_should_umount(uid, (const char *const)process)) {
               flags |= PROCESS_ON_DENYLIST;
             }
           }
@@ -492,7 +510,7 @@ void zygiskd_start(char *restrict argv[]) {
         size_t modules_len = context.len;
         ret = write_size_t(client_fd, modules_len);
         ASSURE_SIZE_WRITE_BREAK("GetInfo", "modules_len", ret, sizeof(modules_len));
-        
+
         for (size_t i = 0; i < modules_len; i++) {
           ret = write_string(client_fd, context.modules[i].name);
           if (ret == -1) {
@@ -639,17 +657,24 @@ void zygiskd_start(char *restrict argv[]) {
         ASSURE_SIZE_READ_BREAK("UpdateMountNamespace", "mns_state", ret, sizeof(mns_state));
 
         uint32_t our_pid = (uint32_t)getpid();
-        ret = write_uint32_t(client_fd, (uint32_t)our_pid);
+        ret = write_uint32_t(client_fd, our_pid);
         ASSURE_SIZE_WRITE_BREAK("UpdateMountNamespace", "our_pid", ret, sizeof(our_pid));
 
-        if ((enum MountNamespaceState)mns_state == Clean) {
-          save_mns_fd(pid, Rooted, impl);
-          save_mns_fd(pid, Module, impl);
+        if ((enum MountNamespaceState)mns_state == Clean)
+          save_mns_fd(pid, Mounted, impl);
+
+        int ns_fd = save_mns_fd(pid, (enum MountNamespaceState)mns_state, impl);
+        if (ns_fd == -1) {
+          LOGE("Failed to save mount namespace fd for pid %d: %s\n", pid, strerror(errno));
+
+          ret = write_uint32_t(client_fd, (uint32_t)0);
+          ASSURE_SIZE_WRITE_BREAK("UpdateMountNamespace", "ns_fd", ret, sizeof(ns_fd));
+
+          break;
         }
 
-        uint32_t clean_namespace_fd = (uint32_t)save_mns_fd(pid, (enum MountNamespaceState)mns_state, impl);
-        ret = write_uint32_t(client_fd, clean_namespace_fd);
-        ASSURE_SIZE_WRITE_BREAK("UpdateMountNamespace", "clean_namespace_fd", ret, sizeof(clean_namespace_fd));
+        ret = write_uint32_t(client_fd, (uint32_t)ns_fd);
+        ASSURE_SIZE_WRITE_BREAK("UpdateMountNamespace", "ns_fd", ret, sizeof(ns_fd));
 
         break;
       }

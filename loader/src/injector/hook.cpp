@@ -156,7 +156,12 @@ bool update_mnt_ns(enum mount_namespace_state mns_state, bool dry_run) {
         return false;
     }
 
-    LOGD("set mount namespace to [%s] fd=[%d]\n", ns_path, updated_ns);
+    const char *mns_state_str = NULL;
+    if (mns_state == Clean) mns_state_str = "clean";
+    else if (mns_state == Mounted) mns_state_str = "mounted";
+    else mns_state_str = "unknown";
+
+    LOGD("set mount namespace to [%s] fd=[%d]: %s", ns_path, updated_ns, mns_state_str);
     if (setns(updated_ns, CLONE_NEWNS) == -1) {
         PLOGE("Failed to set mount namespace [%s]", ns_path);
         close(updated_ns);
@@ -177,10 +182,21 @@ DCL_HOOK_FUNC(int, unshare, int flags) {
         // This is reproducible on the official AVD running API 26 and 27.
         // Simply avoid doing any unmounts for SysUI to avoid potential issues.
         !g_ctx->flags[SERVER_FORK_AND_SPECIALIZE] && !(g_ctx->info_flags & PROCESS_IS_FIRST_STARTED)) {
-        if (g_ctx->info_flags & (PROCESS_IS_MANAGER | PROCESS_GRANTED_ROOT)) {
-            update_mnt_ns(Rooted, false);
-        } else if (!(g_ctx->flags[DO_REVERT_UNMOUNT])) {
-            update_mnt_ns(Module, false);
+
+        /* INFO: There might be cases, specifically in Magisk, where the app is in
+                   DenyList but also has root privileges. For those, it is up to the
+                   user remove it, and the weird behavior is expected, as the weird
+                   user behavior. */
+
+        /* INFO: For cases like Magisk, where you can only give an app SU if it was
+                   either requested before or if it's not in DenyList, we cannot
+                   umount it, or else it will not be (easily) possible to give new
+                   apps SU. Apps that are not marked in APatch/KernelSU to be umounted
+                   are also expected to have AP/KSU mounts there, so we will follow the
+                   same idea by not umounting any mount. */
+
+        if (g_ctx->info_flags & (PROCESS_IS_MANAGER | PROCESS_GRANTED_ROOT) || !(g_ctx->flags[DO_REVERT_UNMOUNT])) {
+            update_mnt_ns(Mounted, false);
         }
 
         old_unshare(CLONE_NEWNS);
@@ -661,7 +677,7 @@ void ZygiskContext::run_modules_post() {
 void ZygiskContext::app_specialize_pre() {
     flags[APP_SPECIALIZE] = true;
 
-    info_flags = rezygiskd_get_process_flags(g_ctx->args.app->uid);
+    info_flags = rezygiskd_get_process_flags(g_ctx->args.app->uid, (const char *const)process);
      if (info_flags & PROCESS_IS_FIRST_STARTED) {
         /* INFO: To ensure we are really using a clean mount namespace, we use
                    the first process it as reference for clean mount namespace,
@@ -682,8 +698,6 @@ void ZygiskContext::app_specialize_pre() {
                    identify Zygisk, being it not built-in, as working, we also set it. */
         setenv("ZYGISK_ENABLED", "1", 1);
     } else {
-        run_modules_pre();
-
         /* INFO: Modules only have two "start off" points from Zygisk, preSpecialize and
                    postSpecialize. While preSpecialie in fact runs with Zygote (not superuser)
                    privileges, in postSpecialize it will now be with lower permission, in
@@ -691,10 +705,15 @@ void ZygiskContext::app_specialize_pre() {
                    executing the modules preSpecialize.
         */
         if ((info_flags & PROCESS_ON_DENYLIST) == PROCESS_ON_DENYLIST) {
-            flags[DO_REVERT_UNMOUNT] = true;
+          flags[DO_REVERT_UNMOUNT] = true;
 
-            update_mnt_ns(Clean, false);
+          update_mnt_ns(Clean, false);
         }
+
+        /* INFO: Executed after setns to ensure a module can update the mounts of an 
+                   application without worrying about it being overwritten by setns.
+        */
+        run_modules_pre();
     }
 }
 
@@ -737,10 +756,11 @@ void ZygiskContext::nativeForkSystemServer_pre() {
     flags[SERVER_FORK_AND_SPECIALIZE] = true;
 
     fork_pre();
-    if (is_child()) {
-        run_modules_pre();
-        rezygiskd_system_server_started();
-    }
+    if (!is_child())
+      return;
+
+    run_modules_pre();
+    rezygiskd_system_server_started();
 
     sanitize_fds();
 }

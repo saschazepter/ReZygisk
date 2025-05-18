@@ -66,7 +66,11 @@ static uint64_t *g_module_load_counter = NULL;
 static uint64_t *g_module_unload_counter = NULL;
 
 static bool solist_init() {
-  ElfImg *linker = ElfImg_create("/linker");
+  #ifdef __LP64__
+    ElfImg *linker = ElfImg_create("/system/bin/linker64", NULL);
+  #else
+    ElfImg *linker = ElfImg_create("/system/bin/linker", NULL);
+  #endif
   if (linker == NULL) {
     LOGE("Failed to load linker");
 
@@ -93,7 +97,7 @@ static bool solist_init() {
       See #63 for more information.
   */
   solist = (SoInfo *)getSymbValueByPrefix(linker, "__dl__ZL6solist");
-  if (solist == NULL) {
+  if ((void *)solist == NULL) {
     LOGE("Failed to find solist __dl__ZL6solist*");
 
     ElfImg_destroy(linker);
@@ -101,8 +105,9 @@ static bool solist_init() {
     return false;
   }
 
+  LOGD("%p is solist", (void *)solist);
+
   somain = (SoInfo *)getSymbValueByPrefix(linker, "__dl__ZL6somain");
-  LOGI("%p is somain", (void *)somain);
   if (somain == NULL) {
     LOGE("Failed to find somain __dl__ZL6somain*");
 
@@ -110,6 +115,8 @@ static bool solist_init() {
 
     return false;
   }
+
+  LOGD("%p is somain", (void *)somain);
 
   sonext = (SoInfo **)getSymbAddressByPrefix(linker, "__dl__ZL6sonext");
   if (sonext == NULL) {
@@ -120,14 +127,10 @@ static bool solist_init() {
     return false;
   }
 
+  LOGD("%p is sonext", (void *)sonext);
+
   SoInfo *vdso = (SoInfo *)getSymbValueByPrefix(linker, "__dl__ZL4vdso");
-  if (vdso == NULL) {
-    LOGE("Failed to find vsdo __dl__ZL4vdso*");
-
-    ElfImg_destroy(linker);
-
-    return false;
-  }
+  if (vdso != NULL) LOGD("%p is vdso", (void *)vdso);
 
   get_realpath_sym = (const char *(*)(SoInfo *))getSymbAddress(linker, "__dl__ZNK6soinfo12get_realpathEv");
   if (get_realpath_sym == NULL) {
@@ -138,6 +141,8 @@ static bool solist_init() {
     return false;
   }
 
+  LOGD("%p is get_realpath", (void *)get_realpath_sym);
+
   soinfo_free = (void (*)(SoInfo *))getSymbAddressByPrefix(linker, "__dl__ZL11soinfo_freeP6soinfo");
   if (soinfo_free == NULL) {
     LOGE("Failed to find soinfo_free __dl__ZL11soinfo_freeP6soinfo*");
@@ -146,6 +151,8 @@ static bool solist_init() {
 
     return false;
   }
+
+  LOGD("%p is soinfo_free", (void *)soinfo_free);
 
   g_module_load_counter = (uint64_t *)getSymbAddress(linker, "__dl__ZL21g_module_load_counter");
   if (g_module_load_counter != NULL) LOGD("found symbol g_module_load_counter");

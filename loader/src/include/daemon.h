@@ -50,8 +50,7 @@ struct rezygisk_info {
 
 enum mount_namespace_state {
   Clean,
-  Rooted,
-  Module
+  Mounted
 };
 
 #define TMP_PATH "/data/adb/rezygisk"
@@ -64,7 +63,7 @@ int rezygiskd_connect(uint8_t retry);
 
 bool rezygiskd_ping();
 
-uint32_t rezygiskd_get_process_flags(uid_t uid);
+uint32_t rezygiskd_get_process_flags(uid_t uid, const char *const process);
 
 void rezygiskd_get_info(struct rezygisk_info *info);
 
