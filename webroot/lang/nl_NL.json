@@ -26,7 +26,6 @@
     "home": {
       "header": "Thuis",
       "status": {
-        "unknown": "Onbekend",
         "notWorking": "Werkt Niet",
         "ok": "Werkt",
         "partially": "Werkt Gedeeltelijk"
