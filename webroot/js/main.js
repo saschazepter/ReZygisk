@@ -148,10 +148,10 @@ async function getModuleNames(modules) {
   root_impl.innerHTML = ReZygiskState.root
 
   switch (ReZygiskState.monitor.state) {
-    case "0": monitor_status.innerHTML = translations.page.actions.status.tracing; break;
-    case "1": monitor_status.innerHTML = translations.page.actions.status.stopping; break;
-    case "2": monitor_status.innerHTML = translations.page.actions.status.stopped; break;
-    case "3": monitor_status.innerHTML = translations.page.actions.status.exiting; break;
+    case '0': monitor_status.innerHTML = translations.page.actions.status.tracing; break;
+    case '1': monitor_status.innerHTML = translations.page.actions.status.stopping; break;
+    case '2': monitor_status.innerHTML = translations.page.actions.status.stopped; break;
+    case '3': monitor_status.innerHTML = translations.page.actions.status.exiting; break;
     default: monitor_status.innerHTML = translations.page.actions.status.unknown;
   }
 

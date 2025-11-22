@@ -2,7 +2,6 @@ import { smallPageDisabler } from '../smallPageDesabler.js'
 import { setAmoled } from '../themes/amoled.js'
 import { setDark } from '../themes/dark.js'
 import { setLight } from '../themes/light.js'
-// import { setMonochrome } from '../themes/monochrome.js'
 
 // INFO: requirement variables
 let sys_theme
