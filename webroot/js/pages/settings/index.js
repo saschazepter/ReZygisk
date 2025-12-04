@@ -1,7 +1,6 @@
-import { loadMiniPage, reloadPage, setLanguage } from '../pageLoader.js'
+import { loadPage } from '../pageLoader.js'
 import utils from '../utils.js'
-
-import { exec, fullScreen, toast } from '../../kernelsu.js'
+import { fullScreen } from '../../kernelsu.js'
 
 function _writeState(ConfigState) {
   return localStorage.setItem('/system/webui_config', JSON.stringify(ConfigState))
@@ -43,25 +42,15 @@ export async function load() {
   globalThis.loadedWebUIConfigState = true
 
   const lang_page_toggle = document.getElementById('lang_page_toggle')
-  if (ConfigState.disableFullscreen) lang_page_toggle.checked = true
 
   utils.addListener(lang_page_toggle, 'click', async () => {
-    function setLanguageCb(event) {
-      if (event.target === undefined || !event.target.id.startsWith('language:')) return;
+    loadPage('mini_settings_language')
+  })
 
-      const language = event.target.id.split(':')[1]
+  const theme_page_toggle = document.getElementById('theme_page_toggle')
 
-      setLanguage(language)
-      reloadPage()
-
-      return true
-    }
-
-    loadMiniPage('language', () => {
-      utils.removeListener(window, 'click', setLanguageCb)
-    })
-
-    utils.addListener(window, 'click', setLanguageCb)
+  utils.addListener(theme_page_toggle, 'click', async () => {
+    loadPage('mini_settings_theme')
   })
 
   const tw_webui_fullscreen_switch = document.getElementById('tw_webui_fullscreen_switch')
