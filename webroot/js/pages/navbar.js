@@ -1,10 +1,19 @@
-import { loadPage, allPages } from './pageLoader.js'
+import { loadPage, allPages, allMiniPages } from './pageLoader.js'
 
 export function loadNavbar() {
   document.getElementById('nibg_home').classList.add('show')
 }
 
 export function setNavbar(page) {
+  /* INFO: Page loader may return false if the page is mini */
+  if (allMiniPages.includes(page)) {
+    allPages.forEach((page) => {
+      document.getElementById(`n_${page}`).removeAttribute('checked')
+    })
+    document.getElementById(`n_${page}`).setAttribute('checked', '')
+    return
+  }
+
   allPages.forEach((page) => {
     document.getElementById(`n_${page}`).removeAttribute('checked')
     document.getElementById(`nibg_${page}`).classList.remove('show')
@@ -17,7 +26,7 @@ export function setNavbar(page) {
 }
 
 export function whichCurrentPage() {
-  for (const page of ['home', 'modules', 'actions', 'settings']) {
+  for (const page of allPages) {
     if (document.getElementById(`n_${page}`).hasAttribute('checked')) return page
   }
 
