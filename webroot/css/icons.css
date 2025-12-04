@@ -30,17 +30,3 @@
   z-index: 10;
   filter: invert(1);
 }
-
-/* Light */
-.light_icon_mode {
-  filter: invert(0) !important;
-}
-
-#ec_icon {
-  background: url(../assets/ec-icon.svg);
-  z-index: 40;
-}
-
-/* .fill {
-
-} */

@@ -1,30 +1,9 @@
 {
   "langName": "English (United States)",
-  "global": {
-    "unknown": "Unknown"
-  },
-  "smallPage": {
-    "language": {
-      "header": "Choose your new language"
-    },
-    "theme": {
-      "header": "Choose your new theme",
-      "dark": "Dark",
-      "light": "Light",
-      "system": "System Based"
-    },
-    "errorh": {
-      "buttons": {
-        "copy": "COPY",
-        "clear": "CLEAR ALL LOGS"
-      },
-      "header": "Error History",
-      "placeholder": "No error log recorded here!"
-    }
-  },
-  "page": {
+  "pages": {
     "home": {
-      "header": "Home",
+      "title": "Home",
+      "unknown": "Unknown",
       "status": {
         "notWorking": "Not Working",
         "ok": "Working",
@@ -40,54 +19,54 @@
         }
       }
     },
+    "actions": {
+      "title": "Actions",
+      "monitor": {
+        "title": "Monitor",
+        "status": {
+          "tracing": "Tracing",
+          "stopping": "Stopping",
+          "stopped": "Stopped",
+          "exiting": "Exiting",
+          "unknown": "Unknown"
+        },
+        "button": {
+          "start": "Start",
+          "stop": "Stop",
+          "pause": "Pause"
+        }
+      }
+    },
     "modules": {
-      "header": "Modules",
+      "title": "Modules",
       "notAvaliable": "No modules using Zygisk here.",
       "arch": "Architecture: "
     },
-    "actions": {
-      "header": "Action",
-      "monitorButton": {
-        "start": "Start",
-        "stop": "Stop",
-        "pause": "Pause"
-      },
-      "monitor": "Monitor",
-      "status": {
-        "tracing": "Tracing",
-        "stopping": "Stopping",
-        "stopped": "Stopped",
-        "exiting": "Exiting",
-        "unknown": "Unknown"
-      }
-    },
     "settings": {
-      "header": "Settings",
+      "title": "Settings",
+      "language": {
+        "title": "Change language",
+        "description": "Change the language of the WebUI to the selected one."
+      },
+      "fullscreen": {
+        "title": "Disable fullscreen mode in WebUI",
+        "description": "This option will make the WebUI not fill the whole screen."
+      },
       "font": {
-        "header": "Enable system font",
+        "title": "Enable system font",
         "description": "This option will enable system font in current WebUI. NOTE: May not be compatible with FlipFont"
       },
-      "theme": {
-        "header": "System theme",
-        "description": "Choose your system theme for current WebUI"
+      "moduleDevelopers": "Module Developer(s)",
+      "WebUIDevelopers": "WebUI Developer(s)",
+      "orginalDevelopers": "Original Module Developer(s)",
+      "moduleLicense": {
+        "title": "Module License",
+        "license": "Proprietary"
       },
-      "language": {
-        "header": "Change language",
-        "description": "Change to your new language"
-      },
-      "logs": {
-        "header": "Error History",
-        "description": "View all of your error log"
-      },
-      "credits": {
-        "module": "Module Developer",
-        "original": "Original Module Developer",
-        "web": "WebUI Developer"
-      },
-      "license": {
-        "module": "Module License",
-        "web": "WebUI License"
-      }
+      "WebUILicense": "WebUI License"
     }
+  },
+  "globals": {
+    "unknown": "Unknown"
   }
 }
