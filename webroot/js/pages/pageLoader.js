@@ -6,22 +6,13 @@ import { loadNavbar, setNavbar, whichCurrentPage } from './navbar.js'
 import utils from './utils.js'
 
 const head = document.getElementsByTagName('head')[0]
-const miniPageRegex = /mini_(.*)_(.*)/
 
-export const allMainPages = [
+export const allPages = [
   'home',
   'modules',
   'actions',
   'settings'
 ]
-
-export const allMiniPages = [
-  'mini_settings_language',
-  'mini_settings_theme'
-]
-
-export const allPages = [ ...allMainPages, ...allMiniPages ]
-
 
 const loadedPageView = []
 /* INFO: Direct assignment would link both arrays. We do not want that. */
@@ -44,24 +35,12 @@ document.addEventListener('click', async (event) => {
 }, false)
 
 async function loadHTML(pageId) {
-  if (miniPageRegex.test(pageId)) {
-    const miniPageIdData = miniPageRegex.exec(pageId)
-    const parentPage = miniPageIdData[1]
-    const miniPage = miniPageIdData[2]
-    return fetch(`js/pages/${parentPage}/minipage/${miniPage}/index.html`)
-      .then((response) => response.text())
-      .then((data) => {
-        return data
-      })
-      .catch(() => false)
-  } else {
-    return fetch(`js/pages/${pageId}/index.html`)
-      .then((response) => response.text())
-      .then((data) => {
-        return data
-      })
-      .catch(() => false)
-  }
+  return fetch(`js/pages/${pageId}/index.html`)
+    .then((response) => response.text())
+    .then((data) => {
+      return data
+    })
+    .catch(() => false)
 }
 
 async function hotReloadStrings(html, pageId) {
@@ -130,56 +109,18 @@ async function solveStrings(html, pageId) {
 }
 
 async function getPageScripts(pageId) {
-  if (miniPageRegex.test(pageId)) {
-    const miniPageIdData = miniPageRegex.exec(pageId)
-    const parentPage = miniPageIdData[1]
-    const miniPage = miniPageIdData[2]
-    return fetch(`js/pages/${parentPage}/minipage/${miniPage}/pageScripts`)
-      .then((response) => response.text())
-      .then((data) => {
-        return data
-      })
-      .catch(() => false)
-  } else {
-    return fetch(`js/pages/${pageId}/pageScripts`)
-      .then((response) => response.text())
-      .then((data) => {
-        return data
-      })
-      .catch(() => false)
+  return fetch(`js/pages/${pageId}/pageScripts`)
+    .then((response) => response.text())
+    .then((data) => {
+      return data
+    })
+    .catch(() => false)
   }
-}
 
-async function getPageCSS(pageId) {
-  if (miniPageRegex.test(pageId)) {
-    const miniPageIdData = miniPageRegex.exec(pageId)
-    const parentPage = miniPageIdData[1]
-    const miniPage = miniPageIdData[2]
-    return await fetch(`js/pages/${parentPage}/minipage/${miniPage}/index.css`)
-      .then((response) => response.text())
-      .then((data) => {
-        return data
-      })
-      .catch(() => false)
-  } else {
-    return fetch(`js/pages/${pageId}/index.css`)
-      .then((response) => response.text())
-      .then((data) => {
-        return data
-      })
-      .catch(() => false)
-  }
-}
-
-function importPageJS(pageId) {
-  if (miniPageRegex.test(pageId)) {
-    const miniPageIdData = miniPageRegex.exec(pageId)
-    const parentPage = miniPageIdData[1]
-    const miniPage = miniPageIdData[2]
-    return import(`./${parentPage}/minipage/${miniPage}/index.js`)
-  } else {
-    return import(`./${pageId}/index.js`)
-  }
+async function hasSpecificCSS(pageId) {
+  return fetch(`js/pages/${pageId}/index.css`)
+    .then(() => true)
+    .catch(() => false)
 }
 
 function unuseHTML(page, pageId) {
@@ -241,11 +182,16 @@ async function loadPages() {
       pageContent.appendChild(pageSpecificContent)
       unuseHTML(pageSpecificContent, page)
 
-      const cssData = await getPageCSS(page)
-      if (cssData) {
+      const hasCSS = await hasSpecificCSS(page)
+      if (hasCSS) {
         const cssCode = document.createElement('style')
         cssCode.id = `${page}_css`
-        cssCode.innerHTML = cssData
+        cssCode.innerHTML = await fetch(`js/pages/${page}/index.css`)
+          .then((response) => response.text())
+          .then((data) => {
+            return data
+          })
+          .catch(() => false)
         cssCode.media = 'not all'
 
         head.appendChild(cssCode)
@@ -269,7 +215,7 @@ async function loadPages() {
         first.parentNode.insertBefore(jsCode, first)
       })
 
-      const pageJS = importPageJS(page)
+      const pageJS = import(`./${page}/index.js`)
       pageJS.then((module) => module.loadOnce())
 
       amountLoaded++
@@ -342,7 +288,7 @@ export async function loadPage(pageId) {
 
   setNavbar(pageId)
 
-  const module = await importPageJS(pageId)
+  const module = await import(`./${pageId}/index.js`)
   if (!sufferedUpdate.includes(pageId)) {
     pageSpecificContent.innerHTML = await hotReloadStrings(pageSpecificContent.innerHTML, pageId)
     applyHTMLChanges(pageSpecificContent, pageId)
@@ -402,7 +348,7 @@ export async function loadMiniPage(miniPageId, unloadCb) {
 
   setNavbar(pageId)
 
-  const module = await importPageJS(pageId)
+  const module = await import(`./${pageId}/index.js`)
   if (!sufferedUpdate.includes(pageId)) {
     pageSpecificContent.innerHTML = await hotReloadStrings(pageSpecificContent.innerHTML, pageId)
     applyHTMLChanges(pageSpecificContent, pageId)
