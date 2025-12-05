@@ -20,24 +20,6 @@ async function _getReZygiskState() {
     return;
   }
 
-  stateCmd.stdout = `
-{
-  "root": "KernelSU Next",
-  "monitor": {
-    "state": "0"
-  },
-  "rezygiskd": {
-    "64": {
-      "state": 1,
-      "modules": ["playintegrityfix"]
-    }
-  },
-  "zygote": {
-    "64": 1
-  }
-}
-  `
-
   try {
     const ReZygiskState = JSON.parse(stateCmd.stdout)
     return ReZygiskState
@@ -161,7 +143,7 @@ export async function load() {
   if (ReZygiskState == null) {
     rz_state.innerHTML = strings.unknown
     rz_icon_state.innerHTML = '<img class="brightc" src="assets/mark.svg">'
-
+    document.getElementById('zygote_class').style.display = 'none'
     /* INFO: This hides the throbber screen */
     loading_screen.style.display = 'none'
 
@@ -210,6 +192,7 @@ export async function load() {
 
   if (globalThis.rzState.expectedWorking === 0 || globalThis.rzState.actuallyWorking === 0) {
     rz_state.innerHTML = strings.status.notWorking
+    document.getElementById('zygote_class').style.display = 'none'
   } else if (globalThis.rzState.expectedWorking === globalThis.rzState.actuallyWorking) {
     rz_state.innerHTML = strings.status.ok
 
