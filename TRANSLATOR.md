@@ -10,8 +10,8 @@
 - **id_ID** by [@bpanca05](https://github.com/bpanca05) & [@LuckyKiddos](https://github.com/GuitarHeroStyles)
 - **it_IT** by [@thasave14](https://github.com/thasave14)
 - **ja_JP** by [@Fyphen1223](https://github.com/Fyphen1223) & [@reindex-ot](https://github.com/reindex-ot)
-- **ms_MS** by <https://crowdin.com/profile/sheeplag>
-- **nl_NL** We don't know who translate this since Pedro does not credit the author in the patch, so if you translate this, contact RainyXeon in Telegram!
+- **ms_MS** by [@sheeplag (crowdin)](https://crowdin.com/profile/sheeplag)
+- **nl_NL** by [@DragoWing (crowdin)](https://crowdin.com/profile/DragoWing)
 - **pt_BR** by [@ThePedroo](https://github.com/ThePedroo)
 - [Removed due to missing translation] **ro_RO** by [@ExtremeXT](https://github.com/ExtremeXT)
 - **ru_RU** by [@Emulond](https://github.com/Emulond) & [@AJleKcAHgP68](https://github.com/AJleKcAHgP68)
