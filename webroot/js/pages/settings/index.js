@@ -24,16 +24,13 @@ export async function load() {
     enableSystemFont: false
   }
 
-  if (!globalThis.loadedWebUIConfigState) {
-    let webui_config = localStorage.getItem('/system/webui_config')
+  let webui_config = localStorage.getItem('/system/webui_config')
 
-    if (!webui_config) {
-      localStorage.setItem('/system/webui_config', JSON.stringify(ConfigState))
-    } else {
-      ConfigState = JSON.parse(webui_config)
-    }
+  if (!webui_config) {
+    localStorage.setItem('/system/webui_config', JSON.stringify(ConfigState))
+  } else {
+    ConfigState = JSON.parse(webui_config)
   }
-
 
   utils.addListener(document.getElementById('lang_page_toggle'), 'click', () => {
     loadPage('mini_settings_language')
