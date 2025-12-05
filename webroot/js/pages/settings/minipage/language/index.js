@@ -1,4 +1,4 @@
-import { loadPage, setLanguage, reloadPage } from '../../../pageLoader.js'
+import { loadPage, setLanguage } from '../../../pageLoader.js'
 
 const availableLanguages = [
   'ar_EG', // @ZG089
@@ -75,7 +75,6 @@ export async function load() {
   sp_lang_close.addEventListener('click', async function langCloseButtonListener() {
     sp_lang_close.removeEventListener('click', langCloseButtonListener)
     loadPage('settings')
-    reloadPage()
   })
 
   document.addEventListener('click', async function langButtonListener(event) {
