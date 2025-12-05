@@ -72,7 +72,13 @@
       "title": "Thay đổi ngôn ngữ"
     },
     "mini_settings_theme": {
-      "title": "Thay đổi giao diện WebUI"
+      "title": "Thay đổi giao diện WebUI",
+      "theme": {
+        "dark": "Giao diện tối",
+        "light": "Giao diện sáng",
+        "amoled": "Giao diện Amoled",
+        "system_based": "Tự động theo hệ thống"
+      }
     }
   },
   "globals": {

@@ -25,6 +25,7 @@
   background-color: var(--button);
   transition: 0.4s;
   border-radius: 34px;
+  border: 2px solid var(--desc);
   /* border: 2px solid var(--button); */
 }
 
@@ -33,8 +34,8 @@
   content: "";
   height: 23px;
   width: 23px;
-  left: 6px;
-  bottom: 6px;
+  left: 4px;
+  bottom: 4px;
   transition: 0.4s;
   background-color: var(--desc);
   border-radius: 50%;

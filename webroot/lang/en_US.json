@@ -72,7 +72,13 @@
       "title": "Change language"
     },
     "mini_settings_theme": {
-      "title": "Change WebUI theme"
+      "title": "Change WebUI theme",
+      "theme": {
+        "dark": "Dark Theme",
+        "light": "Light Theme",
+        "amoled": "Amoled Theme",
+        "system_based": "System Based Theme"
+      }
     }
   },
   "globals": {
