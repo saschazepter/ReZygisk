@@ -12,7 +12,7 @@ const availableLanguages = [
   'it_IT', // @thasave14
   'ja_JP', // @Fyphen1223 / @reindex-ot
   'ms_MS', // @sheeplag (https://crowdin.com/profile/sheeplag)
-  'nl_NL', // <Lost Modia>
+  'nl_NL', // @DragoWing (https://crowdin.com/profile/DragoWing)
   'pt_BR', // @ThePedroo
   'ru_RU', // @Emulond / @AJleKcAHgP68
   'tr_TR', // @witchfuneral
