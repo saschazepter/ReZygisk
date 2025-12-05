@@ -34,12 +34,6 @@ export async function load() {
     }
   }
 
-  if (globalThis.loadedModuleConfigState) {
-    ConfigState.disableFullscreen = rz_webui_fullscreen_switch.checked
-    ConfigState.enableSystemFont = rz_webui_font_switch.checked
-  }
-
-  globalThis.loadedWebUIConfigState = true
 
   utils.addListener(document.getElementById('lang_page_toggle'), 'click', () => {
     loadPage('mini_settings_language')
@@ -57,7 +51,7 @@ export async function load() {
     ConfigState.disableFullscreen = !ConfigState.disableFullscreen
     _writeState(ConfigState)
 
-    fullScreen(!ConfigState.disableFullscreen)
+    fullScreen(ConfigState.disableFullscreen)
   })
 
   const rz_webui_font_switch = document.getElementById('rz_webui_font_switch')
