@@ -188,8 +188,6 @@ export async function load() {
     }
   }
 
-  console.log(globalThis.rzState)
-
   if (globalThis.rzState.expectedWorking === 0 || globalThis.rzState.actuallyWorking === 0) {
     rz_state.innerHTML = strings.status.notWorking
     document.getElementById('zygote_class').style.display = 'none'

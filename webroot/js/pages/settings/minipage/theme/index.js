@@ -31,6 +31,7 @@ export async function load() {
   sp_theme_close.addEventListener('click', async function themeCloseButtonListener() {
     sp_theme_close.removeEventListener('click', themeCloseButtonListener)
     loadPage('settings')
+    reloadPage()
   })
 
   document.addEventListener('click', async function themeButtonListener(event) {
