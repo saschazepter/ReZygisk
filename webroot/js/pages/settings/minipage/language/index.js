@@ -59,6 +59,7 @@ export async function load() {
   sp_lang_close.addEventListener('click', async function langCloseButtonListener() {
     sp_lang_close.removeEventListener('click', langCloseButtonListener)
     loadPage('settings')
+    reloadPage()
   })
 
   document.addEventListener('click', async function langButtonListener(event) {
