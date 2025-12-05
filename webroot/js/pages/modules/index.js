@@ -11,24 +11,6 @@ async function _getReZygiskState() {
     return;
   }
 
-  stateCmd.stdout = `
-{
-  "root": "KernelSU Next",
-  "monitor": {
-    "state": "0"
-  },
-  "rezygiskd": {
-    "64": {
-      "state": 1,
-      "modules": ["playintegrityfix"]
-    }
-  },
-  "zygote": {
-    "64": 1
-  }
-}
-  `
-
   try {
     const ReZygiskState = JSON.parse(stateCmd.stdout)
     return ReZygiskState
