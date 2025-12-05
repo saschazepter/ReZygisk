@@ -1,0 +1,87 @@
+{
+  "langName": "Malay (Malaysia)",
+  "pages": {
+    "home": {
+      "title": "Home",
+      "unknown": "Tidak diketahui",
+      "androidVersion": "Android Version",
+			"linuxKernelVersion": "Linux Kernel Version",
+      "status": {
+        "notWorking": "Tidak Berfungsi",
+        "ok": "Berfungsi",
+        "partially": "Separa Berfungsi"
+      },
+      "info": {
+        "version": "Versi",
+        "root": "Pelaksanaan Root",
+        "zygote": {
+          "injected": "Disuntik",
+          "notInjected": "Tidak Disuntik",
+          "unknown": "Tidak diketahui"
+        }
+      }
+    },
+    "actions": {
+      "title": "Tindakan",
+      "monitor": {
+        "title": "Pantau",
+        "status": {
+          "tracing": "Menjejak",
+          "stopping": "Berhenti",
+          "stopped": "Telah Berhenti",
+          "exiting": "Keluar",
+          "unknown": "Tidak diketahui"
+        },
+        "button": {
+          "pause": "Berhenti sebentar",
+          "stop": "Berhenti",
+          "start": "Mula"
+        }
+      }
+    },
+    "modules": {
+      "title": "Modul",
+      "notAvaliable": "Tiada modul menggunakan Zygisk di sini.",
+      "arch": "Arkitektur: "
+    },
+    "settings": {
+      "title": "الإعدادات",
+      "language": {
+        "title": "Tukar bahasa",
+        "description": "Change the language of the WebUI to the selected one."
+      },
+      "fullscreen": {
+        "title": "Disable fullscreen mode in WebUI",
+        "description": "This option will make the WebUI not fill the whole screen."
+      },
+      "theme": {
+        "title": "Change WebUI theme",
+        "description": "Choose your system theme for current WebUI"
+      },
+      "font": {
+        "title": "Hidupkan fon sistem",
+        "description": "Pilihan ini akan menghidupkan fon sistem dalam WebUI semasa. NOTA: Mungkin tidak serasi dengan FlipFont"
+      },
+      "moduleDevelopers": "Module Developer(s)",
+      "WebUIDevelopers": "WebUI Developer(s)",
+      "orginalDevelopers": "Original Module Developer(s)",
+      "moduleLicense": "Module License",
+      "WebUILicense": "WebUI License"
+    },
+    "mini_settings_language": {
+      "title": "Tukar bahasa"
+    },
+    "mini_settings_theme": {
+      "title": "Change WebUI theme",
+      "theme": {
+        "dark": "Dark Theme",
+        "light": "Light Theme",
+        "amoled": "Amoled Theme",
+        "system_based": "System Based Theme"
+      }
+    }
+  },
+  "globals": {
+    "unknown": "Tidak diketahui"
+  }
+}
