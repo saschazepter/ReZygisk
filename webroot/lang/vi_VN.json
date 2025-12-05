@@ -40,9 +40,9 @@
       }
     },
     "modules": {
-      "title": "Modules",
-      "notAvaliable": "No modules using Zygisk here.",
-      "arch": "Architecture: "
+      "title": "Mô Đun",
+      "notAvaliable": "Không có mô-đun nào sử dụng Zygisk ở đây!",
+      "arch": "Kiến trúc: "
     },
     "settings": {
       "title": "Cài đặt",
@@ -51,8 +51,8 @@
         "description": "Thay đổi sang ngôn ngữ mới"
       },
       "fullscreen": {
-        "title": "Disable fullscreen mode in WebUI",
-        "description": "This option will make the WebUI not fill the whole screen."
+        "title": "Vô hiệu hóa chế độ toàn màn hình trên WebUI",
+        "description": "Tùy chọn này sẽ khiến cho WebUI không còn ở toàn màn hình."
       },
       "theme": {
         "title": "Giao diện WebUI",
