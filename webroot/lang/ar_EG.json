@@ -1,0 +1,87 @@
+{
+  "langName": "العربية",
+  "pages": {
+    "home": {
+      "title": "الصفحة الرئيسية",
+      "unknown": "غير معروف",
+      "androidVersion": "Android Version",
+			"linuxKernelVersion": "Linux Kernel Version",
+      "status": {
+        "notWorking": "لا يعمل",
+        "ok": "يعمل",
+        "partially": "يعمل بشكل جزئي"
+      },
+      "info": {
+        "version": "الإصدار",
+        "root": "مدير الروت",
+        "zygote": {
+          "injected": "محقن",
+          "notInjected": "غير محقن",
+          "unknown": "غير معروف"
+        }
+      }
+    },
+    "actions": {
+      "title": "زر الإجراء",
+      "monitor": {
+        "title": "المراقبة",
+        "status": {
+          "tracing": "يتم التتبع",
+          "stopping": "يتم الإيقاف",
+          "stopped": "متوقف",
+          "exiting": "يتم الخروج",
+          "unknown": "غير معروف"
+        },
+        "button": {
+          "start": "تشغيل",
+          "stop": "تعطيل",
+          "pause": "إيقاف مؤقت"
+        }
+      }
+    },
+    "modules": {
+      "title": "الإضافات",
+      "notAvaliable": "لا توجد إضافات تستخدم zygisk.",
+      "arch": "النواة: "
+    },
+    "settings": {
+      "title": "الإعدادات",
+      "language": {
+        "title": "تغيير اللغة",
+        "description": "Change the language of the WebUI to the selected one."
+      },
+      "fullscreen": {
+        "title": "Disable fullscreen mode in WebUI",
+        "description": "This option will make the WebUI not fill the whole screen."
+      },
+      "theme": {
+        "title": "Change WebUI theme",
+        "description": "Choose your system theme for current WebUI"
+      },
+      "font": {
+        "title": "تشغيل خط النظام",
+        "description": "هذا الخيار يقوم بعرض النص بخط النظام بدلا من خط WebUI. قد لا يتوافق مع FlipFont"
+      },
+      "moduleDevelopers": "Module Developer(s)",
+      "WebUIDevelopers": "WebUI Developer(s)",
+      "orginalDevelopers": "Original Module Developer(s)",
+      "moduleLicense": "Module License",
+      "WebUILicense": "WebUI License"
+    },
+    "mini_settings_language": {
+      "title": "تغيير اللغة"
+    },
+    "mini_settings_theme": {
+      "title": "Change WebUI theme",
+      "theme": {
+        "dark": "Dark Theme",
+        "light": "Light Theme",
+        "amoled": "Amoled Theme",
+        "system_based": "System Based Theme"
+      }
+    }
+  },
+  "globals": {
+    "unknown": "غير معروف"
+  }
+}

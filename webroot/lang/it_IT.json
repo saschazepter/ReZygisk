@@ -1,0 +1,87 @@
+{
+  "langName": "Italiano (Italia)",
+  "pages": {
+    "home": {
+      "title": "Home",
+      "unknown": "Sconosciuto",
+      "androidVersion": "Android Version",
+			"linuxKernelVersion": "Linux Kernel Version",
+      "status": {
+        "notWorking": "Non funzionante",
+        "ok": "Funzionante",
+        "partially": "Funzionante Parzialmente"
+      },
+      "info": {
+        "version": "Versione",
+        "root": "Implementazione root",
+        "zygote": {
+          "injected": "Iniettato",
+          "notInjected": "Non Iniettato",
+          "unknown": "Sconosciuto"
+        }
+      }
+    },
+    "actions": {
+      "title": "Azioni",
+      "monitor": {
+        "title": "Controlla",
+        "status": {
+          "tracing": "Tracing",
+          "stopping": "Fermando",
+          "stopped": "Fermato",
+          "exiting": "Uscendo",
+          "unknown": "Sconosciuto"
+        },
+        "button": {
+          "pause": "Pausa",
+          "stop": "Ferma",
+          "start": "Avvia"
+        }
+      }
+    },
+    "modules": {
+      "title": "Moduli",
+      "notAvaliable": "Nessun modulo che utilizza Zygisk qui.",
+      "arch": "Architettura: "
+    },
+    "settings": {
+      "title": "Impostazioni",
+      "language": {
+        "title": "Cambia lingua",
+        "description": "Change the language of the WebUI to the selected one."
+      },
+      "fullscreen": {
+        "title": "Disable fullscreen mode in WebUI",
+        "description": "This option will make the WebUI not fill the whole screen."
+      },
+      "theme": {
+        "title": "Change WebUI theme",
+        "description": "Choose your system theme for current WebUI"
+      },
+      "font": {
+        "title": "Abilita font di sistema",
+        "description": "Questa opzione abiliterà il font di sistema nella WebUI. NOTA: Potrebbe non funzionare bene con FlipFont"
+      },
+      "moduleDevelopers": "Module Developer(s)",
+      "WebUIDevelopers": "WebUI Developer(s)",
+      "orginalDevelopers": "Original Module Developer(s)",
+      "moduleLicense": "Module License",
+      "WebUILicense": "WebUI License"
+    },
+    "mini_settings_language": {
+      "title": "Cambia lingua"
+    },
+    "mini_settings_theme": {
+      "title": "Change WebUI theme",
+      "theme": {
+        "dark": "Dark Theme",
+        "light": "Light Theme",
+        "amoled": "Amoled Theme",
+        "system_based": "System Based Theme"
+      }
+    }
+  },
+  "globals": {
+    "unknown": "Sconosciuto"
+  }
+}

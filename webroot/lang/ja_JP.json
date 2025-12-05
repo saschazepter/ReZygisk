@@ -1,0 +1,87 @@
+{
+  "langName": "日本語",
+  "pages": {
+    "home": {
+      "title": "ホーム",
+      "unknown": "不明",
+      "androidVersion": "Android Version",
+			"linuxKernelVersion": "Linux Kernel Version",
+      "status": {
+        "notWorking": "動作していません",
+        "ok": "動作中",
+        "partially": "部分的に動作中"
+      },
+      "info": {
+        "version": "バージョン",
+        "root": "Root の実装",
+        "zygote": {
+          "injected": "インジェクト済み",
+          "notInjected": "未インジェクト",
+          "unknown": "不明"
+        }
+      }
+    },
+    "actions": {
+      "title": "アクション",
+      "monitor": {
+        "title": "監視",
+        "status": {
+          "tracing": "トレース中",
+          "stopping": "停止中",
+          "stopped": "停止済み",
+          "exiting": "終了中",
+          "unknown": "不明"
+        },
+        "button": {
+          "start": "開始",
+          "stop": "停止",
+          "pause": "一時停止"
+        }
+      }
+    },
+    "modules": {
+      "title": "モジュール",
+      "notAvaliable": "Zygisk を使用するモジュールはありません。",
+      "arch": "アーキテクチャ: "
+    },
+    "settings": {
+      "title": "設定",
+      "language": {
+        "title": "言語の変更",
+        "description": "Change the language of the WebUI to the selected one."
+      },
+      "fullscreen": {
+        "title": "Disable fullscreen mode in WebUI",
+        "description": "This option will make the WebUI not fill the whole screen."
+      },
+      "theme": {
+        "title": "Change WebUI theme",
+        "description": "Choose your system theme for current WebUI"
+      },
+      "font": {
+        "title": "システムフォントを有効化",
+        "description": "現在の WebUI でシステムフォントの使用を有効化します。注意: FlipFont との互換性がない場合があります"
+      },
+      "moduleDevelopers": "Module Developer(s)",
+      "WebUIDevelopers": "WebUI Developer(s)",
+      "orginalDevelopers": "Original Module Developer(s)",
+      "moduleLicense": "Module License",
+      "WebUILicense": "WebUI License"
+    },
+    "mini_settings_language": {
+      "title": "言語の変更"
+    },
+    "mini_settings_theme": {
+      "title": "Change WebUI theme",
+      "theme": {
+        "dark": "Dark Theme",
+        "light": "Light Theme",
+        "amoled": "Amoled Theme",
+        "system_based": "System Based Theme"
+      }
+    }
+  },
+  "globals": {
+    "unknown": "不明"
+  }
+}

@@ -1,8 +1,24 @@
 import { loadPage, setLanguage, reloadPage } from '../../../pageLoader.js'
 
 const availableLanguages = [
-  'en_US', // @PerformanC (The PerformanC Organization)
-  'vi_VN', // @RainyXeon (Renia in RainyLand)
+  'ar_EG', // @ZG089
+  'de_DE', // @Blazzycrafer
+  'en_US', // @PerformanC
+  'es_AR', // @Flopster101
+  'es_ES', // @LuchoModzzz
+  'es_MX', // @LuchoModzzz
+  'fr_FR', // @GhostFRR
+  'id_ID', // @bpanca05 / @LuckyKiddos
+  'it_IT', // @thasave14
+  'ja_JP', // @Fyphen1223 / @reindex-ot
+  'ms_MS', // @sheeplag (https://crowdin.com/profile/sheeplag)
+  'nl_NL', // <Lost Modia>
+  'pt_BR', // @ThePedroo
+  'ru_RU', // @Emulond / @AJleKcAHgP68
+  'tr_TR', // @witchfuneral
+  'uk_UA', // @Kittyskj
+  'vi_VN', // @RainyXeon
+  'zh_CN'  // @Meltartica / @SheepChef
 ]
 
 async function _setNewThemeIcon() {

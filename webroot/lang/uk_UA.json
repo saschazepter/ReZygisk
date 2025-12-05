@@ -1,0 +1,87 @@
+{
+  "langName": "Українська (Україна)",
+  "pages": {
+    "home": {
+      "title": "Головна",
+      "unknown": "Невідомо",
+      "androidVersion": "Android Version",
+			"linuxKernelVersion": "Linux Kernel Version",
+      "status": {
+        "notWorking": "Не працює",
+        "ok": "Працює",
+        "partially": "Частково працює"
+      },
+      "info": {
+        "version": "Версія",
+        "root": "Root реалізація",
+        "zygote": {
+          "injected": "Ін'єктовано",
+          "notInjected": "Не ін'єктовано",
+          "unknown": "Невідомо"
+        }
+      }
+    },
+    "actions": {
+      "title": "Дії",
+      "monitor": {
+        "title": "Моніторинг",
+        "status": {
+          "tracing": "Відстежується",
+          "stopping": "Зупиняється",
+          "stopped": "Зупинено",
+          "exiting": "Виходить",
+          "unknown": "Невідомий"
+        },
+        "button": {
+          "start": "Почати",
+          "stop": "Зупинити",
+          "pause": "Пауза"
+        }
+      }
+    },
+    "modules": {
+      "title": "Модулі",
+      "notAvaliable": "Немає модулів, які б використовували Zygisk.",
+      "arch": "Архітектура: "
+    },
+    "settings": {
+      "title": "Налаштування",
+      "language": {
+        "title": "Змінити мову",
+        "description": "Change the language of the WebUI to the selected one."
+      },
+      "fullscreen": {
+        "title": "Disable fullscreen mode in WebUI",
+        "description": "This option will make the WebUI not fill the whole screen."
+      },
+      "theme": {
+        "title": "Change WebUI theme",
+        "description": "Choose your system theme for current WebUI"
+      },
+      "font": {
+        "title": "Увімкнути системний шрифт",
+        "description": "Ця опція увімкне системний шрифт у поточному WebUI. Примітка: Може бути несумісною з FlipFont"
+      },
+      "moduleDevelopers": "Module Developer(s)",
+      "WebUIDevelopers": "WebUI Developer(s)",
+      "orginalDevelopers": "Original Module Developer(s)",
+      "moduleLicense": "Module License",
+      "WebUILicense": "WebUI License"
+    },
+    "mini_settings_language": {
+      "title": "Змінити мову"
+    },
+    "mini_settings_theme": {
+      "title": "Change WebUI theme",
+      "theme": {
+        "dark": "Dark Theme",
+        "light": "Light Theme",
+        "amoled": "Amoled Theme",
+        "system_based": "System Based Theme"
+      }
+    }
+  },
+  "globals": {
+    "unknown": "Невідомо"
+  }
+}
