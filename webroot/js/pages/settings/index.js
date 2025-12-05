@@ -35,28 +35,24 @@ export async function load() {
   }
 
   if (globalThis.loadedModuleConfigState) {
-    ConfigState.disableFullscreen = tw_webui_fullscreen_switch.checked
-    ConfigState.enableSystemFont = tw_webui_font_switch.checked
+    ConfigState.disableFullscreen = rz_webui_fullscreen_switch.checked
+    ConfigState.enableSystemFont = rz_webui_font_switch.checked
   }
 
   globalThis.loadedWebUIConfigState = true
 
-  const lang_page_toggle = document.getElementById('lang_page_toggle')
-
-  utils.addListener(lang_page_toggle, 'click', async () => {
+  utils.addListener(document.getElementById('lang_page_toggle'), 'click', () => {
     loadPage('mini_settings_language')
   })
 
-  const theme_page_toggle = document.getElementById('theme_page_toggle')
-
-  utils.addListener(theme_page_toggle, 'click', async () => {
+  utils.addListener(document.getElementById('theme_page_toggle'), 'click', () => {
     loadPage('mini_settings_theme')
   })
 
-  const tw_webui_fullscreen_switch = document.getElementById('tw_webui_fullscreen_switch')
-  if (ConfigState.disableFullscreen) tw_webui_fullscreen_switch.checked = true
+  const rz_webui_fullscreen_switch = document.getElementById('rz_webui_fullscreen_switch')
+  if (ConfigState.disableFullscreen) rz_webui_fullscreen_switch.checked = true
 
-  utils.addListener(tw_webui_fullscreen_switch, 'click', () => {
+  utils.addListener(rz_webui_fullscreen_switch, 'click', () => {
     /* INFO: This is swapped, as it meant to disable the fullscreen */
     ConfigState.disableFullscreen = !ConfigState.disableFullscreen
     _writeState(ConfigState)
@@ -64,11 +60,11 @@ export async function load() {
     fullScreen(!ConfigState.disableFullscreen)
   })
 
-  const tw_webui_font_switch = document.getElementById('tw_webui_font_switch')
-  if (ConfigState.enableSystemFont) tw_webui_font_switch.checked = true
+  const rz_webui_font_switch = document.getElementById('rz_webui_font_switch')
+  if (ConfigState.enableSystemFont) rz_webui_font_switch.checked = true
 
-  utils.addListener(tw_webui_font_switch, 'click', () => {
-    /* INFO: This is swapped, as it meant to enable the fullscreen */
+  utils.addListener(rz_webui_font_switch, 'click', () => {
+    /* INFO: This is swapped, as it meant to enable the system font */
     ConfigState.enableSystemFont = !ConfigState.enableSystemFont
   
     if (ConfigState.enableSystemFont) {
