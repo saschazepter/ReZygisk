@@ -52,6 +52,8 @@ function reapplyListeners() {
     if (!element) continue
 
     for (const type in elementsCopy[elementId]) {
+      // INFO: iterate is not defined in any of vanilla JS element event, so we should ignore it
+      if (type == "iterate") continue;
       elementsCopy[elementId][type].forEach(listener => {
         element.addEventListener(type, listener)
       })
