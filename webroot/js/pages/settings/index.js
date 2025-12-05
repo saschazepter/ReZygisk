@@ -51,7 +51,7 @@ export async function load() {
     ConfigState.disableFullscreen = !ConfigState.disableFullscreen
     _writeState(ConfigState)
 
-    fullScreen(ConfigState.disableFullscreen)
+    fullScreen(!ConfigState.disableFullscreen)
   })
 
   const rz_webui_font_switch = document.getElementById('rz_webui_font_switch')
