@@ -363,6 +363,8 @@ export async function reloadPage() {
   const pageSpecificContent = document.getElementById(`${pageId}_content`)
   pageSpecificContent.innerHTML = await solveStrings(await loadHTML(pageId), pageId)
 
+  const module = await importPageJS(pageId)
+  module.load()
   /* INFO: When reloading the page, due to the way the HTML is reloaded, the JavaScript
              listeners are lost, so we need to reapply them to ensure everything works. */
   utils.reapplyListeners()
