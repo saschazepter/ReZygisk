@@ -1,4 +1,4 @@
-import { loadPage, setLanguage } from '../../../pageLoader.js'
+import { loadPage, setLanguage, reloadPage } from '../../../pageLoader.js'
 
 const availableLanguages = [
   'ar_EG', // @ZG089
