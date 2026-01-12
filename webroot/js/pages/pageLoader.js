@@ -106,7 +106,7 @@ async function solveStrings(html, pageId) {
       }
     })
   } catch (e) {
-    toast(`Failed to load ${localStorage.getItem('language') || 'en_US'} strings. Entering safe mode.`)
+    toast(`Failed to load ${localStorage.getItem('/ReZygisk/language') || 'en_US'} strings. Entering safe mode.`)
   }
 
   /* INFO: Perform navbar string replacement */
@@ -371,7 +371,7 @@ export async function reloadPage() {
 }
 
 export function getStrings(pageId) {
-  return fetch(`lang/${localStorage.getItem('language') || 'en_US'}.json`)
+  return fetch(`lang/${localStorage.getItem('/ReZygisk/language') || 'en_US'}.json`)
     .then((response) => response.json())
     .then((data) => {
       return {
@@ -389,7 +389,7 @@ export function getStrings(pageId) {
 }
 
 export function setLanguage(langId) {
-  localStorage.setItem('language', langId)
+  localStorage.setItem('/ReZygisk/language', langId)
 
   sufferedUpdate.length = 0
 }
@@ -397,14 +397,14 @@ export function setLanguage(langId) {
 (async () => {
   await loadPages()
 
-  let webui_config = localStorage.getItem('/system/webui_config')
+  let webui_config = localStorage.getItem('/ReZygisk/webui_config')
 
   if (!webui_config) {
     webui_config = {
       disableFullscreen: false,
       enableSystemFont: false
     }
-    localStorage.setItem('/system/webui_config', JSON.stringify(webui_config))
+    localStorage.setItem('/ReZygisk/webui_config', JSON.stringify(webui_config))
   } else {
     webui_config = JSON.parse(webui_config)
   }
