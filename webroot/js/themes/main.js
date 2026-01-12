@@ -15,6 +15,6 @@ export const themeList = {
 }
 
 export const setThemeData = (mode) => {
-  localStorage.setItem('/system/theme', mode)
+  localStorage.setItem('/ReZygisk/theme', mode)
   return mode
 }

@@ -3,7 +3,7 @@ import { loadPage } from '../../../pageLoader.js'
 
 async function _setNewThemeIcon() {
   const back_icon = document.getElementById('sp_theme_close')
-  const sys_theme = localStorage.getItem('/system/theme')
+  const sys_theme = localStorage.getItem('/ReZygisk/theme')
   if (!sys_theme) return;
   if (sys_theme == "light") {
     back_icon.classList.add('light_icon_mode')
