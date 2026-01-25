@@ -16,7 +16,7 @@ document.addEventListener('click', async (event) => {
 
 // INFO: Initial open logic
 let sys_theme = localStorage.getItem('/ReZygisk/theme')
-if (!sys_theme) sys_theme = setThemeData('dark')
+if (!sys_theme) sys_theme = setThemeData('system')
 themeList[sys_theme](true)
 
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
