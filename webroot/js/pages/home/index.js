@@ -107,7 +107,7 @@ export async function load() {
 
   const strings = await getStrings(whichCurrentPage())
 
-  let root_impl = ReZygiskState.root
+  let root_impl = ReZygiskState ? ReZygiskState.root : null
   if (!root_impl) root_impl = strings.unknown
   if (root_impl === 'Multiple') root_impl = strings.rootImpls.multiple
 
@@ -123,9 +123,9 @@ export async function load() {
     return;
   }
 
-  rzState.expectedWorking = (ReZygiskState.zygote['64'] !== undefined ? 1 : 0) + (ReZygiskState.zygote['32'] !== undefined ? 1 : 0)
+  rzState.expectedWorking = ReZygiskState.zygote === undefined ? 0 : (ReZygiskState.zygote['64'] !== undefined ? 1 : 0) + (ReZygiskState.zygote['32'] !== undefined ? 1 : 0)
 
-  if (ReZygiskState.zygote['64'] !== undefined) {
+  if (ReZygiskState.zygote['64'] && ReZygiskState.zygote !== undefined) {
     const zygote64 = ReZygiskState.zygote['64']
 
     zygote_divs[0].style.display = 'block'
@@ -143,7 +143,7 @@ export async function load() {
     }
   }
 
-  if (ReZygiskState.zygote['32'] !== undefined) {
+  if (ReZygiskState.zygote && ReZygiskState.zygote['32'] !== undefined) {
     const zygote32 = ReZygiskState.zygote['32']
 
     zygote_divs[1].style.display = 'block'
@@ -176,6 +176,10 @@ export async function load() {
     rz_icon_state.innerHTML = '<img class="brightc" src="assets/warn.svg">'
   }
 
+  if (ReZygiskState.zygote === undefined) {
+    document.getElementById('zygote_class').style.display = 'none'
+  }
+
   /* INFO: This hides the throbber screen */
   loading_screen.style.display = 'none'
-    }
+}

@@ -53,7 +53,7 @@ export async function load() {
   const all_modules = []
 	const strings = await getStrings(whichCurrentPage())
 
-  Object.keys(ReZygiskState.rezygiskd).forEach((daemon_bit) => {
+  if (ReZygiskState.rezygiskd) Object.keys(ReZygiskState.rezygiskd).forEach((daemon_bit) => {
     const daemon = ReZygiskState.rezygiskd[daemon_bit]
 
     if (daemon.modules && daemon.modules.length > 0) {
