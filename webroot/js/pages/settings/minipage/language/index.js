@@ -15,7 +15,7 @@ const availableLanguages = [
   'nl_NL', // @DragoWing (https://crowdin.com/profile/DragoWing)
   'pt_BR', // @ThePedroo / @CharaDreemurrDT
   'ru_RU', // @Emulond / @AJleKcAHgP68
-  'tr_TR', // @witchfuneral
+  'tr_TR', // @witchfuneral / @codefl0w (https://crowdin.com/profile/codefl0w) / @DogancanYr (https://crowdin.com/profile/DogancanYr)
   'uk_UA', // @Kittyskj
   'vi_VN', // @RainyXeon
   'zh_CN'  // @Meltartica / @SheepChef

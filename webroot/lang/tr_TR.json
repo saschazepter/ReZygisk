@@ -2,82 +2,82 @@
   "langName": "Türkçe (Türkiye)",
   "pages": {
     "home": {
-      "title": "Anasayfa",
+      "title": "Ana Sayfa",
       "unknown": "Bilinmiyor",
-      "androidVersion": "Android Version",
-			"linuxKernelVersion": "Linux Kernel Version",
+      "androidVersion": "Android Sürümü",
+      "linuxKernelVersion": "Linux Çekirdek Sürümü",
       "status": {
-        "notWorking": "Aktif Değil",
-        "ok": "Aktif",
-        "partially": "Yarı-Aktif"
+        "notWorking": "Çalışmıyor",
+        "ok": "Çalışıyor",
+        "partially": "Kısmen Çalışıyor"
       },
       "info": {
-        "version": "Versiyon",
-        "root": "Root İmplementasyonu",
+        "version": "Sürüm",
+        "root": "Root Uygulama Metodu",
         "zygote": {
-          "injected": "Enjekte",
-          "notInjected": "Enjekte Değil",
+          "injected": "Enjekte Edildi",
+          "notInjected": "Enjekte Edilmedi",
           "unknown": "Bilinmiyor"
         }
       }
     },
     "actions": {
-      "title": "Hareketler",
+      "title": "İşlemler",
       "monitor": {
-        "title": "Monitör",
+        "title": "Durum",
         "status": {
-          "tracing": "İzleniyor",
-          "stopping": "Durduluyor",
-          "stopped": "Durdu",
+          "tracing": "Çalışıyor",
+          "stopping": "Durduruluyor",
+          "stopped": "Durduruldu",
           "exiting": "Çıkılıyor",
           "unknown": "Bilinmiyor"
         },
         "button": {
           "start": "Başlat",
-          "stop": "Bitir",
-          "pause": "Durdur"
+          "stop": "Durdur",
+          "pause": "Duraklat"
         }
       }
     },
     "modules": {
       "title": "Modüller",
-      "notAvaliable": "Burada Zygisk kullanan modül yok.",
+      "notAvaliable": "Zygisk kullanan hiçbir modül yok.",
       "arch": "Mimari: "
     },
     "settings": {
       "title": "Ayarlar",
       "language": {
         "title": "Dil değiştir",
-        "description": "Change the language of the WebUI to the selected one."
+        "description": "Web arayüzünün dilini seçilen dille değiştirin."
       },
       "fullscreen": {
-        "title": "Disable fullscreen mode in WebUI",
-        "description": "This option will make the WebUI not fill the whole screen."
+        "title": "WebUI'de tam ekran modunu devre dışı bırak",
+        "description": "Bu seçenek, WebUI'nin ekranın tamamını kaplamamasını sağlayacaktır."
       },
       "theme": {
-        "title": "Change WebUI theme",
-        "description": "Choose your system theme for current WebUI"
+        "title": "WebUI temasını değiştir",
+        "description": "Mevcut WebUI için sistem temanızı seçin"
       },
       "font": {
-        "title": "Sistem yazı tipini aktifleştir",
-        "description": "Bu seçenek anlık WebUI (Web Arayüzü) için sistem yazıt tipini aktifleştirir. NOT: FlipFont ile uyumlu olmayabilir!"
+        "title": "Sistem yazı tipini etkinleştir",
+        "description": "Bu seçenek, mevcut WebUI sistem yazı tipini etkinleştirecektir.\nNOT: FlipFont ile uyumlu olmayabilir"
       },
-      "moduleDevelopers": "Module Developer(s)",
-      "WebUIDevelopers": "WebUI Developer(s)",
-      "orginalDevelopers": "Original Module Developer(s)",
-      "moduleLicense": "Module License",
-      "WebUILicense": "WebUI License"
+      "moduleDevelopers": "Modül Geliştirici(leri)",
+      "WebUIDevelopers": "WebUI Geliştirici(leri)",
+      "orginalDevelopers": "Orijinal Modül Geliştirici(leri)",
+      "moduleLicense": "Modül Lisansı",
+      "WebUILicense": "WebUI Lisansı"
     },
     "mini_settings_language": {
-      "title": "Dil değiştir"
+      "title": "Dili değiştir"
     },
     "mini_settings_theme": {
-      "title": "Change WebUI theme",
+      "title": "WebUI temasını değiştir",
       "theme": {
-        "dark": "Dark Theme",
-        "light": "Light Theme",
-        "amoled": "Amoled Theme",
-        "system_based": "System Based Theme"
+        "dark": "Karanlık Tema",
+        "light": "Açık Tema",
+        "amoled": "Amoled Tema",
+        "system_based": "Sisteme Göre Tema"
       }
     }
   },
