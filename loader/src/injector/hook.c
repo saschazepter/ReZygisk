@@ -648,23 +648,29 @@ static bool api_plt_hook_commit_v4(void) {
   return lsplt_commit_hook();
 }
 
+/* INFO: Avoid common mistakes of not utilizing implementation member (impl) when calling
+           any Zygisk API functions by logging that error. */
+#define RZID_MAGIC ('R' + 'Z' + 'I' + 'D')
+#define ENCODE_ID(id) ((void *)((size_t)(id) + RZID_MAGIC))
+#define DECODE_ID(ptr) ((size_t)(ptr) - RZID_MAGIC)
+
 static int api_connect_companion(void *id) {
   if (!g_ctx) return -1;
 
-  if ((size_t)id >= zygisk_module_length) {
-    LOGE("Invalid module id %zu", (size_t)id);
+  if ((size_t)id < RZID_MAGIC || (size_t)id >= RZID_MAGIC + zygisk_module_length) {
+    LOGE("Invalid (encoded) module id %zu", (size_t)id);
 
     return -1;
   }
 
-  return rezygiskd_connect_companion((size_t)id);
+  return rezygiskd_connect_companion(DECODE_ID(id));
 }
 
 static void api_set_option(void *id, enum rezygisk_options opt) {
   if (!g_ctx) return;
 
-  if ((size_t)id >= zygisk_module_length) {
-    LOGE("Invalid module id %zu", (size_t)id);
+  if ((size_t)id < RZID_MAGIC || (size_t)id >= RZID_MAGIC + zygisk_module_length) {
+    LOGE("Invalid (encoded) module id %zu", (size_t)id);
 
     return;
   }
@@ -676,7 +682,7 @@ static void api_set_option(void *id, enum rezygisk_options opt) {
       break;
     }
     case DLCLOSE_MODULE_LIBRARY: {
-      struct rezygisk_module *m_lib = &zygisk_modules[(size_t)id];
+      struct rezygisk_module *m_lib = &zygisk_modules[DECODE_ID(id)];
       m_lib->unload = true;
 
       break;
@@ -687,13 +693,13 @@ static void api_set_option(void *id, enum rezygisk_options opt) {
 static int api_get_module_dir(void *id) {
   if (!g_ctx) return -1;
 
-  if ((size_t)id >= zygisk_module_length) {
-    LOGE("Invalid module id %zu", (size_t)id);
+  if ((size_t)id < RZID_MAGIC || (size_t)id >= RZID_MAGIC + zygisk_module_length) {
+    LOGE("Invalid (encoded) module id %zu", (size_t)id);
 
     return -1;
   }
 
-  return rezygiskd_get_module_dir((size_t)id);
+  return rezygiskd_get_module_dir(DECODE_ID(id));
 }
 
 static uint32_t api_get_flags(void) {
@@ -707,7 +713,7 @@ bool rezygisk_module_register(struct rezygisk_api *api, struct rezygisk_abi cons
 
   LOGD("Registering module with API version %ld", target_module->api_version);
 
-  struct rezygisk_module *m = &zygisk_modules[(size_t)api->impl];
+  struct rezygisk_module *m = &zygisk_modules[DECODE_ID(api->impl)];
   m->abi = *target_module;
   m->api = *api;
 
@@ -875,6 +881,13 @@ static bool load_modules_only(void) {
     if (!csoloader_load(&zygisk_modules[zygisk_module_length].lib, lib_path)) {
       LOGE("Failed to load module [%s]", lib_path);
 
+      /* INFO: In case a module failed to load, update the list of available modules
+           in ReZygiskd to avoid a mismatch between the loaded modules in ReZygisk
+           Zygote library and the available modules in ReZygiskd. */
+      /* TODO: Update the list of modules for ReZygisk monitor, so that it can update
+                 for WebUI. That is simply cosmetic, though. */
+      rezygiskd_remove_module(i);
+
       continue;
     }
 
@@ -884,11 +897,13 @@ static bool load_modules_only(void) {
 
       csoloader_unload(&zygisk_modules[zygisk_module_length].lib);
 
+      rezygiskd_remove_module(i);
+
       continue;
     }
 
     zygisk_modules[zygisk_module_length].api.register_module = rezygisk_module_register;
-    zygisk_modules[zygisk_module_length].api.impl = (void *)zygisk_module_length;
+    zygisk_modules[zygisk_module_length].api.impl = ENCODE_ID((void *)zygisk_module_length);
     zygisk_modules[zygisk_module_length].zygisk_module_entry = (void (*)(void *, void *))entry;
 
     LOGD("Loaded module [%s]. Entry: %p", lib_path, entry);
@@ -944,7 +959,6 @@ static void rz_run_modules_post(struct zygisk_context *ctx) {
 
 static void rz_app_specialize_pre(struct zygisk_context *ctx) {
   FLAG_SET(ctx, APP_SPECIALIZE);
-
 
   /* INFO: Isolated services have different UIDs than the main apps. Because
               numerous root implementations base themselves in the UID of the
