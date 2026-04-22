@@ -1,30 +1,11 @@
 {
   "langName": "Español (México)",
-  "global": {
-    "unknown": "Desconocido"
-  },
-  "smallPage": {
-    "language": {
-      "header": "Selecciona tu nuevo idioma"
-    },
-    "theme": {
-      "header": "Elige tu nuevo tema",
-      "dark": "Oscuro",
-      "light": "Claro",
-      "system": "Predeterminado del sistema"
-    },
-    "errorh": {
-      "buttons": {
-        "copy": "COPIAR",
-        "clear": "BORRAR REGISTROS"
-      },
-      "header": "Historial de errores",
-      "placeholder": "¡No hay errores registrados aquí!"
-    }
-  },
-  "page": {
+  "pages": {
     "home": {
-      "header": "Inicio",
+      "title": "Inicio",
+      "unknown": "Desconocido",
+      "androidVersion": "Android Version",
+      "linuxKernelVersion": "Linux Kernel Version",
       "status": {
         "notWorking": "No funciona",
         "ok": "Funcionando",
@@ -40,54 +21,67 @@
         }
       }
     },
+    "actions": {
+      "title": "Acciones",
+      "monitor": {
+        "title": "Monitor",
+        "status": {
+          "tracing": "Rastreando",
+          "stopping": "Deteniendo",
+          "stopped": "Detenido",
+          "exiting": "Saliendo",
+          "unknown": "Desconocido"
+        },
+        "button": {
+          "start": "Iniciar",
+          "stop": "Detener",
+          "pause": "Pausar"
+        }
+      }
+    },
     "modules": {
-      "header": "Módulos",
+      "title": "Módulos",
       "notAvaliable": "No hay módulos usando Zygisk aquí.",
       "arch": "Arquitectura: "
     },
-    "actions": {
-      "header": "Acciones",
-      "monitorButton": {
-        "start": "Iniciar",
-        "stop": "Detener",
-        "pause": "Pausar"
-      },
-      "monitor": "Monitor",
-      "status": {
-        "tracing": "Rastreando",
-        "stopping": "Deteniendo",
-        "stopped": "Detenido",
-        "exiting": "Saliendo",
-        "unknown": "Desconocido"
-      }
-    },
     "settings": {
-      "header": "Ajustes",
-      "font": {
-        "header": "Activar fuente del sistema",
-        "description": "Esta opción habilitará la fuente del sistema en la WebUI actual. NOTA: Puede no ser compatible con FlipFont."
-      },
-      "theme": {
-        "header": "Tema del sistema",
-        "description": "Elige el tema del sistema para la WebUI actual"
-      },
+      "title": "Ajustes",
       "language": {
-        "header": "Cambiar idioma",
+        "title": "Cambiar idioma",
         "description": "Selecciona tu nuevo idioma"
       },
-      "logs": {
-        "header": "Historial de errores",
-        "description": "Consulta todos tus registros de errores"
+      "fullscreen": {
+        "title": "Disable fullscreen mode in WebUI",
+        "description": "This option will make the WebUI not fill the whole screen."
       },
-      "credits": {
-        "module": "Desarrollador del módulo",
-        "original": "Desarrollador original del módulo",
-        "web": "Desarrollador de la WebUI"
+      "theme": {
+        "title": "Tema del sistema",
+        "description": "Elige el tema del sistema para la WebUI actual"
       },
-      "license": {
-        "module": "Licencia del módulo",
-        "web": "Licencia de la WebUI"
+      "font": {
+        "title": "Activar fuente del sistema",
+        "description": "Esta opción habilitará la fuente del sistema en la WebUI actual. NOTA: Puede no ser compatible con FlipFont"
+      },
+      "moduleDevelopers": "Desarrollador del módulo",
+      "WebUIDevelopers": "Desarrollador de la WebUI",
+      "orginalDevelopers": "Desarrollador original del módulo",
+      "moduleLicense": "Licencia del módulo",
+      "WebUILicense": "Licencia de la WebUI"
+    },
+    "mini_settings_language": {
+      "title": "Selecciona tu nuevo idioma"
+    },
+    "mini_settings_theme": {
+      "title": "Elige tu nuevo tema",
+      "theme": {
+        "dark": "Oscuro",
+        "light": "Claro",
+        "amoled": "Amoled Theme",
+        "system_based": "Predeterminado del sistema"
       }
     }
+  },
+  "globals": {
+    "unknown": "Desconocido"
   }
 }
