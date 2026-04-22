@@ -7,9 +7,9 @@
       "androidVersion": "Versão do Android",
 			"linuxKernelVersion": "Versão do Kernel Linux",
       "status": {
-        "notWorking": "Não funcionando",
-        "ok": "Funcionando",
-        "partially": "Funcionando parcialmente"
+        "notWorking": "Não Funcionando",
+        "ok": "Em Funcionamento",
+        "partially": "Parcialmente Funcional"
       },
       "info": {
         "version": "Versão",
@@ -41,7 +41,7 @@
     },
     "modules": {
       "title": "Módulos",
-      "notAvaliable": "Nenhum módulo está usando Zygisk aqui.",
+      "notAvaliable": "Nenhum módulo usando o Zygisk aqui.",
       "arch": "Arquitetura: "
     },
     "settings": {
@@ -51,11 +51,11 @@
         "description": "Mudar a linguagem da WebUI para a selecionada."
       },
       "fullscreen": {
-        "title": "Desabilitar a tela cheia na WebUI",
+        "title": "Desabilitar modo de tela cheia na WebUI",
         "description": "Essa opção fai fazer a WebUI não ocupar a tela inteira."
       },
       "theme": {
-        "title": "Mudar tema da WebUI",
+        "title": "Mudar o tema da WebUI",
         "description": "Escolha um tema do sistema para a atual WebUI."
       },
       "font": {
@@ -76,7 +76,7 @@
       "theme": {
         "dark": "Tema Escuro",
         "light": "Tema Claro",
-        "amoled": "Tema Escuro para telas AMOLED",
+        "amoled": "Tema AMOLED",
         "system_based": "Tema do Sistema"
       }
     }
