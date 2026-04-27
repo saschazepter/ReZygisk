@@ -2,21 +2,21 @@
   "langName": "Italiano (Italia)",
   "pages": {
     "home": {
-      "title": "Home",
+      "title": "Pagina iniziale",
       "unknown": "Sconosciuto",
-      "androidVersion": "Android Version",
-			"linuxKernelVersion": "Linux Kernel Version",
+      "androidVersion": "Versione Android",
+      "linuxKernelVersion": "Versione Linux Kernel",
       "status": {
-        "notWorking": "Non funzionante",
-        "ok": "Funzionante",
-        "partially": "Funzionante Parzialmente"
+        "notWorking": "Non attivo",
+        "ok": "Attivo",
+        "partially": "Parzialmente attivo"
       },
       "info": {
         "version": "Versione",
-        "root": "Implementazione root",
+        "root": "Implementazione radice",
         "zygote": {
-          "injected": "Iniettato",
-          "notInjected": "Non Iniettato",
+          "injected": "Iniezione",
+          "notInjected": "Non iniettato",
           "unknown": "Sconosciuto"
         }
       }
@@ -24,60 +24,60 @@
     "actions": {
       "title": "Azioni",
       "monitor": {
-        "title": "Controlla",
+        "title": "Monitor",
         "status": {
-          "tracing": "Tracing",
-          "stopping": "Fermando",
-          "stopped": "Fermato",
-          "exiting": "Uscendo",
+          "tracing": "Tracciamento",
+          "stopping": "Arrestare",
+          "stopped": "Arrestato",
+          "exiting": "Uscita",
           "unknown": "Sconosciuto"
         },
         "button": {
-          "pause": "Pausa",
-          "stop": "Ferma",
-          "start": "Avvia"
+          "start": "Inizio",
+          "stop": "Arresto",
+          "pause": "Pausa"
         }
       }
     },
     "modules": {
       "title": "Moduli",
       "notAvaliable": "Nessun modulo che utilizza Zygisk qui.",
-      "arch": "Architettura: "
+      "arch": "Architettura "
     },
     "settings": {
       "title": "Impostazioni",
       "language": {
-        "title": "Cambia lingua",
-        "description": "Change the language of the WebUI to the selected one."
+        "title": "Cambia il linguaggio della WebUI in quello selezionato",
+        "description": "Cambia il linguaggio della WebUI in quello selezionato."
       },
       "fullscreen": {
-        "title": "Disable fullscreen mode in WebUI",
-        "description": "This option will make the WebUI not fill the whole screen."
+        "title": "Disabilita la modalità a schermo intero in WebUI",
+        "description": "Questa opzione farà sì che l'interfaccia web non riempia tutta la schermata."
       },
       "theme": {
-        "title": "Change WebUI theme",
-        "description": "Choose your system theme for current WebUI"
+        "title": "Modifica tema WebUI",
+        "description": "Scegli il tema di sistema per l'interfaccia web attuale"
       },
       "font": {
         "title": "Abilita font di sistema",
-        "description": "Questa opzione abiliterà il font di sistema nella WebUI. NOTA: Potrebbe non funzionare bene con FlipFont"
+        "description": "Questa opzione abiliterà il font di sistema nell'interfaccia Web attuale. NOTA: Potrebbe non essere compatibile con FlipFont"
       },
-      "moduleDevelopers": "Module Developer(s)",
-      "WebUIDevelopers": "WebUI Developer(s)",
-      "orginalDevelopers": "Original Module Developer(s)",
-      "moduleLicense": "Module License",
-      "WebUILicense": "WebUI License"
+      "moduleDevelopers": "Sviluppatore(i) moduli",
+      "WebUIDevelopers": "Sviluppatore(i) WebUI",
+      "orginalDevelopers": "Sviluppatore(i) originale del modulo",
+      "moduleLicense": "Licenza del Modulo",
+      "WebUILicense": "Licenza WebUI"
     },
     "mini_settings_language": {
       "title": "Cambia lingua"
     },
     "mini_settings_theme": {
-      "title": "Change WebUI theme",
+      "title": "Modifica tema WebUI",
       "theme": {
-        "dark": "Dark Theme",
-        "light": "Light Theme",
-        "amoled": "Amoled Theme",
-        "system_based": "System Based Theme"
+        "dark": "Tema scuro",
+        "light": "Tema chiaro",
+        "amoled": "Tema Amoled",
+        "system_based": "Tema basato sul sistema"
       }
     }
   },
