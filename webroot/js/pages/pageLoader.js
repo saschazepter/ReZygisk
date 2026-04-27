@@ -370,8 +370,8 @@ export async function reloadPage() {
   utils.reapplyListeners()
 }
 
-export function getStrings(pageId) {
-  return fetch(`lang/${localStorage.getItem('/ReZygisk/language') || 'en_US'}.json`)
+export function getStrings(pageId, forceDefault = false) {
+  return fetch(`lang/${forceDefault ? 'en_US' : (localStorage.getItem('/ReZygisk/language') || 'en_US')}.json`)
     .then((response) => response.json())
     .then((data) => {
       return {
@@ -385,7 +385,17 @@ export function getStrings(pageId) {
         }
       }
     })
-    .catch(() => false)
+    .catch(() => {
+       if (!forceDefault) {
+        toast('Error loading strings for the selected language, loading default (en_US) strings.')
+        
+        return getStrings(pageId, true)
+       }
+
+      toast('Error loading default strings!')
+
+      return false
+    })
 }
 
 export function setLanguage(langId) {
