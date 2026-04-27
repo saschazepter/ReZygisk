@@ -1,4 +1,5 @@
 /* https://github.com/tiann/KernelSU/tree/main/js / https://www.npmjs.com/package/kernelsu */
+import { getDevelopmentExecResponse } from "./development_kit.js";
 
 let callbackCounter = 0;
 function getUniqueCallbackName(prefix) {
@@ -10,7 +11,7 @@ export function exec(command, options) {
     /* INFO: Assume this is a computer for ReZygisk testing */
 
     return new Promise((resolve, reject) => {
-      resolve({ errno: 0, stdout: "OK", stderr: "" });
+      resolve(getDevelopmentExecResponse(command));
     });
   }
 
