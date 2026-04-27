@@ -435,3 +435,20 @@ export function setLanguage(langId) {
   loadPage('home')
   loadNavbar()
 })()
+
+/* INFO: Global error handling to catch any unhandled errors and log them to a file for debugging purposes. */
+window.addEventListener('error', function (event) {
+  toast('An error occurred. See log file.')
+
+  console.error('Unhandled error:', event.error)
+
+  exec(`echo "Error: ${event.message}\n\n${event.error.stack}" > /data/adb/rezygisk/webui_error.log`)
+})
+
+window.addEventListener('unhandledrejection', function (event) {
+  toast('An error occurred. See log file.')
+
+  console.error('Unhandled promise rejection:', event.reason)
+
+  exec(`echo "Error (Unhandled Rejection): ${event.reason}\n\n${event.reason.stack}" > /data/adb/rezygisk/webui_error.log`)
+})
