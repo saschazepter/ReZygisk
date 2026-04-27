@@ -36,19 +36,7 @@ async function _getModuleNames(modules) {
 	return result.stdout.split('\n\n')
 }
 
-export async function loadOnce() {
-
-}
-
-export async function loadOnceView() {
-
-}
-
-export async function onceViewAfterUpdate() {
-
-}
-
-export async function load() {
+async function _updateDynamicElement() {
   const ReZygiskState = await _getReZygiskState()
   const all_modules = []
 	const strings = await getStrings(whichCurrentPage())
@@ -57,7 +45,6 @@ export async function load() {
     const daemon = ReZygiskState.rezygiskd[daemon_bit]
 
     if (daemon.modules && daemon.modules.length > 0) {
-			console.log(daemon.modules)
       daemon.modules.forEach((module_id) => {
         const module = all_modules.find((mod) => mod.id === module_id)
         if (module) {
@@ -98,6 +85,21 @@ export async function load() {
           </div>
         </div>`
     })
-  
   }
+}
+
+export async function loadOnce() {
+
+}
+
+export async function loadOnceView() {
+  _updateDynamicElement()
+}
+
+export async function onceViewAfterUpdate() {
+  _updateDynamicElement()
+}
+
+export async function load() {
+
 }

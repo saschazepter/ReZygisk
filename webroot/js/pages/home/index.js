@@ -3,6 +3,11 @@ import { exec, toast } from '../../kernelsu.js'
 import { whichCurrentPage } from '../navbar.js'
 import { getStrings } from '../pageLoader.js'
 
+let rzState = {
+  actuallyWorking: 0,
+  expectedWorking: 0
+}
+
 async function _getReZygiskState() {
   let stateCmd = await exec('/system/bin/cat /data/adb/rezygisk/state.json')
   if (stateCmd.errno !== 0) {
@@ -63,22 +68,7 @@ async function _getAndroidVersion() {
   }
 }
 
-
-export async function loadOnce() {
-}
-
-export async function loadOnceView() {
-}
-
-export async function onceViewAfterUpdate() {
-}
-
-export async function load() {
-  let rzState = {
-    actuallyWorking: 0,
-    expectedWorking: 0
-  }
-
+async function _updateDynamicElement(firstRun, ReZygiskState, strings) {
   const rootCss = document.querySelector(':root')
   const rz_state = document.getElementById('rz_state')
   const rz_icon_state = document.getElementById('rz_icon_state')
@@ -93,25 +83,10 @@ export async function load() {
     document.getElementById('zygote32_status')
   ]
 
-  document.getElementById('version_code').innerHTML = await _getVersion()
-
   /* INFO: Just ensure that they won't appear unless there's info */
   zygote_divs.forEach((zygote_div) => {
     zygote_div.style.display = 'none'
   })
-
-  document.getElementById('kernel_version_div').innerHTML = await _getKernelString()
-  document.getElementById('android_version_div').innerHTML = await _getAndroidVersion()
-
-  const ReZygiskState = await _getReZygiskState()
-
-  const strings = await getStrings(whichCurrentPage())
-
-  let root_impl = ReZygiskState ? ReZygiskState.root : null
-  if (!root_impl) root_impl = strings.unknown
-  if (root_impl === 'Multiple') root_impl = strings.rootImpls.multiple
-
-  document.getElementById('root_impl').innerHTML = root_impl
 
   if (ReZygiskState == null) {
     rz_state.innerHTML = strings.unknown
@@ -119,11 +94,12 @@ export async function load() {
     document.getElementById('zygote_class').style.display = 'none'
     /* INFO: This hides the throbber screen */
     loading_screen.style.display = 'none'
-
     return;
   }
 
-  rzState.expectedWorking = ReZygiskState.zygote === undefined ? 0 : (ReZygiskState.zygote['64'] !== undefined ? 1 : 0) + (ReZygiskState.zygote['32'] !== undefined ? 1 : 0)
+  if (firstRun) {
+    rzState.expectedWorking = ReZygiskState.zygote === undefined ? 0 : (ReZygiskState.zygote['64'] !== undefined ? 1 : 0) + (ReZygiskState.zygote['32'] !== undefined ? 1 : 0)
+  }
 
   if (ReZygiskState.zygote['64'] && ReZygiskState.zygote !== undefined) {
     const zygote64 = ReZygiskState.zygote['64']
@@ -134,7 +110,7 @@ export async function load() {
       case 1: {
         zygote_status_divs[0].innerHTML = strings.info.zygote.injected
 
-        rzState.actuallyWorking++
+        if (firstRun) rzState.actuallyWorking++
 
         break
       }
@@ -152,7 +128,7 @@ export async function load() {
       case 1: {
         zygote_status_divs[1].innerHTML = strings.info.zygote.injected
 
-        rzState.actuallyWorking++
+        if (firstRun) rzState.actuallyWorking++
 
         break
       }
@@ -179,7 +155,39 @@ export async function load() {
   if (ReZygiskState.zygote === undefined) {
     document.getElementById('zygote_class').style.display = 'none'
   }
+}
+
+export async function loadOnce() {
+  document.getElementById('version_code').innerHTML = await _getVersion()
+
+  document.getElementById('kernel_version_div').innerHTML = await _getKernelString()
+  document.getElementById('android_version_div').innerHTML = await _getAndroidVersion()
+
+  const ReZygiskState = await _getReZygiskState()
+  const strings = await getStrings(whichCurrentPage())
+
+  let root_impl = ReZygiskState ? ReZygiskState.root : null
+  if (!root_impl) root_impl = strings.unknown
+  if (root_impl === 'Multiple') root_impl = strings.rootImpls.multiple
+
+  document.getElementById('root_impl').innerHTML = root_impl
+
+  _updateDynamicElement(true, ReZygiskState, strings)
 
   /* INFO: This hides the throbber screen */
   loading_screen.style.display = 'none'
+}
+
+export async function loadOnceView() {
+
+}
+
+export async function onceViewAfterUpdate() {
+  const ReZygiskState = await _getReZygiskState()
+  const strings = await getStrings(whichCurrentPage())
+  _updateDynamicElement(false, ReZygiskState, strings)
+}
+
+export async function load() {
+
 }

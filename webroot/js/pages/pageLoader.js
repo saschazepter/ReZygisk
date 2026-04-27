@@ -313,7 +313,6 @@ function applyHTMLChanges(page, pageId) {
 }
 
 export async function loadPage(pageId) {
-  console.log("Loaded: ", pageId)
   if (whichCurrentPage() === pageId) return false
 
   const currentPage = whichCurrentPage()
