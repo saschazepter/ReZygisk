@@ -50,7 +50,7 @@ export async function loadOnceView() {
     const langData = await _getLanguageData(langCode)
 
     lang_list_buf.push(`
-      <div lang-data="${langCode}" class="dim card card_animation" style="padding: 25px 15px; cursor: pointer;">
+      <div lang-data="${langCode}" class="dim card card_animation" style="padding: 20px 15px; cursor: pointer;">
         <div lang-data="${langCode}" class="dimc" style="font-size: 1.1em;">${langData.langName}</div>
       </div>
     `)
