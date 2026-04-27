@@ -1,6 +1,5 @@
 .clangd
 .clang-format
 .idea
-.cxx
 .vscode
 build
