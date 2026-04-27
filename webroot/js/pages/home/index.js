@@ -158,6 +158,10 @@ async function _updateDynamicElement(firstRun, ReZygiskState, strings) {
 }
 
 export async function loadOnce() {
+
+}
+
+export async function loadOnceView() {
   document.getElementById('version_code').innerHTML = await _getVersion()
 
   document.getElementById('kernel_version_div').innerHTML = await _getKernelString()
@@ -176,10 +180,6 @@ export async function loadOnce() {
 
   /* INFO: This hides the throbber screen */
   loading_screen.style.display = 'none'
-}
-
-export async function loadOnceView() {
-
 }
 
 export async function onceViewAfterUpdate() {
