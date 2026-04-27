@@ -1,31 +1,14 @@
+import { exec, toast } from '../../../../kernelsu.js'
+
 import { loadPage, setLanguage, reloadPage } from '../../../pageLoader.js'
 
-const availableLanguages = [
-  'ar_EG', // @ZG089
-  'de_DE', // @Blazzycrafer
-  'en_US', // @PerformanC
-  'es_AR', // @Flopster101
-  'es_ES', // @LuchoModzzz
-  'es_MX', // @LuchoModzzz
-  'fr_FR', // @GhostFRR
-  'id_ID', // @bpanca05 / @LuckyKiddos
-  'it_IT', // @thasave14
-  'ja_JP', // @Fyphen1223 / @reindex-ot
-  'ms_MS', // @sheeplag (https://crowdin.com/profile/sheeplag)
-  'nl_NL', // @DragoWing (https://crowdin.com/profile/DragoWing)
-  'pt_BR', // @ThePedroo / @CharaDreemurrDT
-  'ru_RU', // @Emulond / @AJleKcAHgP68
-  'tr_TR', // @witchfuneral / @codefl0w (https://crowdin.com/profile/codefl0w) / @DogancanYr (https://crowdin.com/profile/DogancanYr)
-  'uk_UA', // @Kittyskj
-  'vi_VN', // @RainyXeon
-  'zh_CN'  // @Meltartica / @SheepChef
-]
+let availableLanguages = [ -1 /* INFO: To tell we haven't checked yet */ ]
 
 async function _setNewThemeIcon() {
   const back_icon = document.getElementById('sp_lang_close')
   const sys_theme = localStorage.getItem('/ReZygisk/theme')
   if (!sys_theme) return;
-  if (sys_theme == "light") {
+  if (sys_theme == 'light') {
     back_icon.classList.add('light_icon_mode')
   }
   if (back_icon.classList.contains('light_icon_mode')) {
@@ -33,8 +16,8 @@ async function _setNewThemeIcon() {
   }
 }
 
-async function _getLanguageData(lang_name) {
-  return fetch(`lang/${lang_name}.json`)
+async function _getLanguageData(lang_file) {
+  return fetch(`lang/${lang_file}`)
     .then((response) => response.json())
     .then((data) => {
       return data
@@ -43,11 +26,37 @@ async function _getLanguageData(lang_name) {
 }
 
 export async function loadOnce() {
+  const langListCmd = await exec('/system/bin/ls /data/adb/modules/rezygisk/webroot/lang')
+  if (langListCmd.errno !== 0) {
+    toast('Error getting language list!')
 
+    return;
+  }
+
+  const langList = langListCmd.stdout.split('\n')
+  if (langList.length === 0) {
+    toast('No languages found!')
+
+    return;
+  }
+
+  availableLanguages = langList
 }
 
 export async function loadOnceView() {
+  const lang_list_buf = []
+  for (let i = 0; i < availableLanguages.length; i++) {
+    const langCode = availableLanguages[i]
+    const langData = await _getLanguageData(langCode)
 
+    lang_list_buf.push(`
+      <div lang-data="${langCode}" class="dim card card_animation" style="padding: 25px 15px; cursor: pointer;">
+        <div lang-data="${langCode}" class="dimc" style="font-size: 1.1em;">${langData.langName}</div>
+      </div>
+    `)
+  }
+
+  document.getElementById('lang_list').innerHTML = lang_list_buf.join('')
 }
 
 export async function onceViewAfterUpdate() {
@@ -56,19 +65,6 @@ export async function onceViewAfterUpdate() {
 
 export async function load() {
   _setNewThemeIcon()
-  const lang_list = document.getElementById('lang_list')
-  // INFO: Language list must be empty before load
-  lang_list.innerHTML = ''
-  for (let i = 0; i < availableLanguages.length; i++) {
-    const langCode = availableLanguages[i]
-    const langData = await _getLanguageData(langCode)
-
-    lang_list.innerHTML += `
-      <div lang-data="${langCode}" class="dim card card_animation" style="padding: 25px 15px; cursor: pointer;">
-        <div lang-data="${langCode}" class="dimc" style="font-size: 1.1em;">${langData.langName}</div>
-      </div>
-      `
-  }
 
   const sp_lang_close = document.getElementById('sp_lang_close')
 
@@ -84,10 +80,11 @@ export async function load() {
 
     document.removeEventListener('click', langButtonListener)
 
-    setLanguage(getLangLocate)
+    /* INFO: Strip .json from the end of the filename */
+    setLanguage(getLangLocate.replace('.json', ''))
 
-    if (getLangLocate.includes('ar_')) main_html.setAttribute("dir", "rtl")
-    else main_html.setAttribute("dir", "ltr")
+    if (getLangLocate.includes('ar_')) main_html.setAttribute('dir', 'rtl')
+    else main_html.setAttribute('dir', 'ltr')
 
     loadPage('settings')
 

@@ -3,3 +3,25 @@
   background: var(--dim);
   word-break: break-word;
 }
+
+.panel {
+  min-height: calc(100dvh - 120px);
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+#lang_list {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+}
+
+.lang_loader_center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
