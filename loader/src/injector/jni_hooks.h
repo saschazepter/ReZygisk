@@ -424,7 +424,7 @@ static void do_hook_zygote(JNIEnv *env) {
   int hooks_count = 0;
 
   const char *clz = "com/android/internal/os/Zygote";
-  hook_jni_methods(env, clz, nativeForkAndSpecialize_methods, nativeForkAndSpecialize_methods_count);
+  hook_jni_methods(env, clz, nativeForkAndSpecialize_methods, nativeForkAndSpecialize_methods_count, true);
   for (int i = 0; i < nativeForkAndSpecialize_methods_count; i++) {
     if (!nativeForkAndSpecialize_methods[i].fnPtr) continue;
 
@@ -434,7 +434,7 @@ static void do_hook_zygote(JNIEnv *env) {
     break;
   }
 
-  hook_jni_methods(env, clz, nativeSpecializeAppProcess_methods, nativeSpecializeAppProcess_methods_count);
+  hook_jni_methods(env, clz, nativeSpecializeAppProcess_methods, nativeSpecializeAppProcess_methods_count, true);
   for (int i = 0; i < nativeSpecializeAppProcess_methods_count; i++) {
     if (!nativeSpecializeAppProcess_methods[i].fnPtr) continue;
 
@@ -444,7 +444,7 @@ static void do_hook_zygote(JNIEnv *env) {
     break;
   }
 
-  hook_jni_methods(env, clz, nativeForkSystemServer_methods, nativeForkSystemServer_methods_count);
+  hook_jni_methods(env, clz, nativeForkSystemServer_methods, nativeForkSystemServer_methods_count, true);
   for (int i = 0; i < nativeForkSystemServer_methods_count; i++) {
     if (!nativeForkSystemServer_methods[i].fnPtr) continue;
 
